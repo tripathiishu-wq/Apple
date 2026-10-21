@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cellular modem study: 2G to 6G</title>
+<style>
+:root{
+  --ink:#070a13; --panel:#0e1424; --panel2:#121a30; --line:#1f2b47; --text:#e8edf7; --mute:#8d99b4; --amber:#ffd166;
+  --g2:#8393b2; --g3:#3ddc97; --g4:#3aa8ff; --g5:#9b7bff; --g6:#ff4f8b;
+  --head:"Bahnschrift","Segoe UI Variable Display","SF Pro Display","Helvetica Neue","Segoe UI",system-ui,sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--ink);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.5;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:#7cc4ff}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+.top{position:fixed;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 clamp(14px,3vw,36px);z-index:20;background:linear-gradient(var(--ink) 55%,transparent)}
+.brand{font-family:var(--head);font-weight:600;font-size:15px;color:var(--mute);white-space:nowrap}
+.gens{display:flex;gap:6px}
+.gens span{padding:3px 11px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--line);color:var(--mute);transition:background .25s,color .25s}
+.gens span.on{background:var(--c);border-color:transparent;color:#06101a}
+.ctl{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--mute);white-space:nowrap}
+.ctl button{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:13px}
+.bar{position:fixed;left:0;right:0;bottom:0;height:4px;background:#0c1224;z-index:20}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--g2),var(--g3),var(--g4),var(--g5),var(--g6));transition:width .3s}
+.hint{position:fixed;right:clamp(14px,3vw,36px);bottom:12px;font-size:12px;color:#5d6a88;z-index:15;pointer-events:none}
+
+.deck{position:fixed;inset:0}
+.slide{position:absolute;inset:0;padding:78px clamp(18px,5vw,76px) 54px;overflow-y:auto;opacity:0;visibility:hidden;transition:opacity .22s}
+.slide.on{opacity:1;visibility:visible}
+.slide>.in{max-width:1280px;margin:0 auto}
+h1,h2,h3{font-family:var(--head);margin:0;line-height:1.06;letter-spacing:-.015em}
+h1{font-size:clamp(40px,7vw,96px);font-weight:700}
+h2{font-size:clamp(28px,4vw,52px);font-weight:700;margin-bottom:14px}
+h3{font-size:clamp(18px,1.8vw,22px);font-weight:650;margin-bottom:6px}
+p{margin:0 0 12px}
+.lead{font-size:clamp(17px,1.7vw,22px);color:#c6d0e6;max-width:62ch}
+.mute{color:var(--mute)}
+.small{font-size:14px}
+.cols{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(20px,3.4vw,52px);align-items:start}
+.cols.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media(max-width:900px){.cols,.cols.even{grid-template-columns:1fr}.hint{display:none}.brand{display:none}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.rule{border-left:3px solid var(--c,var(--line));padding-left:14px;margin:0 0 16px}
+.rule b{font-family:var(--head);font-size:18px;display:block;margin-bottom:2px}
+.specs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}
+.spec{border:1px solid var(--c,var(--line));border-radius:8px;padding:5px 10px;font-size:14px;color:#cfd8ec}
+.spec b{color:#fff;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:6px;background:#15213a;color:#9fb4dc;vertical-align:middle;margin-left:6px}
+.tag.src{background:#0f2a22;color:#6ee7b7}.tag.ana{background:#2a2238;color:#d8b4fe}.tag.rum{background:#33280f;color:#ffd166}
+.say{margin-top:18px;padding:12px 16px;border:1px dashed #3a4a73;border-radius:12px;color:#d6defa;font-size:16px}
+.say b{color:var(--amber)}
+svg{max-width:100%;height:auto}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.fig .cap{font-size:13px;color:var(--mute);margin-top:6px}
+
+/* title */
+#s1{display:flex;align-items:center;overflow:hidden}
+.waves{position:absolute;left:0;right:0;bottom:6%;width:100%;height:46%;opacity:.9;pointer-events:none}
+.hero{position:relative;z-index:2;max-width:900px;margin:0 auto 14vh 0;padding-left:0}
+.hero h1{margin-bottom:18px}
+#s1>.in{width:100%}
+
+/* chain */
+.chain{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;margin:18px 0 10px}
+.node{position:relative;padding:12px 12px 14px;border:1px solid var(--line);background:var(--panel);min-height:150px;font-size:14px}
+.node:first-child{border-radius:12px 0 0 12px}.node:last-child{border-radius:0 12px 12px 0}
+.node+.node{border-left:none}
+.node b{display:block;font-family:var(--head);font-size:16px;margin-bottom:4px}
+.node.dig{background:linear-gradient(#10203f,#0e1424)}
+.node.rf{background:linear-gradient(#2a1230,#0e1424)}
+.node::after{content:"";position:absolute;right:-1px;top:50%;width:10px;height:10px;border-top:2px solid var(--amber);border-right:2px solid var(--amber);transform:translate(50%,-50%) rotate(45deg);z-index:2}
+.node:last-child::after{display:none}
+.band{display:grid;grid-template-columns:4fr 3fr;gap:0;font-size:13px;color:var(--mute)}
+.band span{padding:4px 10px;border-top:2px solid #2d5fb8}.band span+span{border-color:#b83d8a}
+@media(max-width:900px){.chain{grid-template-columns:1fr}.node{min-height:0;border-left:1px solid var(--line)!important;border-radius:0!important}.node::after{right:50%;top:auto;bottom:-1px;transform:translate(50%,50%) rotate(135deg)}.band{grid-template-columns:1fr}}
+
+/* lifecycle */
+.steps{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.steps button{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:15px;text-align:left}
+.steps button[aria-pressed=true]{border-color:var(--amber);background:#1d2540}
+.steps button span{color:var(--amber);font-weight:700;margin-right:6px}
+#lifeOut{min-height:120px}
+
+/* sliders / labs */
+.lab{display:grid;gap:14px}
+.row{display:grid;grid-template-columns:150px 1fr 110px;gap:12px;align-items:center;font-size:15px}
+.row output{font-variant-numeric:tabular-nums;text-align:right;color:#fff}
+input[type=range]{width:100%;accent-color:var(--g4)}
+.presets{display:flex;flex-wrap:wrap;gap:8px}
+.presets button{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 11px;font-size:14px}
+.big{font-family:var(--head);font-size:clamp(36px,5vw,68px);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel)}
+.kpi b{display:block;font-family:var(--head);font-size:24px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:13px;color:var(--mute)}
+@media(max-width:600px){.row{grid-template-columns:1fr 90px}.row input{grid-column:1/-1;order:3}}
+
+/* tables */
+.matrix{width:100%;border-collapse:collapse;font-size:14px}
+.matrix th,.matrix td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.matrix thead th{font-family:var(--head);font-size:16px;border-bottom:2px solid var(--c,var(--line))}
+.matrix tbody th{color:var(--mute);font-weight:500;width:120px}
+.scroll{overflow-x:auto}
+
+/* overview */
+.overview{position:fixed;inset:0;background:rgba(7,10,19,.96);z-index:40;overflow:auto;padding:70px clamp(16px,4vw,60px) 40px}
+.overview[hidden]{display:none}
+.ovg{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.ovg button{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:14px}
+.ovg button b{display:block;color:var(--amber);font-family:var(--head)}
+.ovg button.cur{border-color:var(--amber)}
+
+/* cards */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+.filters button{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 13px;font-size:14px}
+.filters button[aria-pressed=true]{background:#1d2a4d;border-color:var(--g4)}
+.qa{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.q{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;width:100%}
+.q .qq{font-weight:600;font-size:15px}
+.q .aa{display:none;margin-top:8px;font-size:14px;color:#c6d0e6;border-top:1px solid var(--line);padding-top:8px}
+.q[aria-expanded=true]{border-color:var(--amber)}
+.q[aria-expanded=true] .aa{display:block}
+.q small{color:var(--mute);display:block;margin-bottom:4px}
+
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:4px 0}
+.chk input{margin-top:4px;accent-color:var(--g4)}
+ul.tight{margin:6px 0 12px;padding-left:20px}ul.tight li{margin:3px 0}
+
+.slide>.in{min-height:calc(100vh - 134px);display:flex;flex-direction:column;justify-content:center}
+#s1>.in{min-height:0}
+.era{display:flex;gap:clamp(14px,2.4vw,34px);align-items:flex-end;margin-top:22px;padding:16px clamp(14px,2vw,26px);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.04),transparent 70%)}
+.era .pic{flex:0 0 auto}.era .pic svg{height:150px;width:auto;display:block}.era .pic.ph svg{height:140px}
+.era .facts{flex:1 1 220px;font-size:15px;color:#c6d0e6;align-self:center}
+.era .facts b{font-family:var(--head);font-size:20px;color:var(--c);display:block;margin-bottom:4px}
+.era .facts ul{margin:4px 0 0;padding-left:18px}.era .facts li{margin:2px 0}
+.evo{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:18px;position:relative}
+.evo .col{text-align:center;padding:8px 6px 14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.05),transparent);border-top:3px solid var(--c)}
+.evo .yr{font-family:var(--head);font-size:clamp(20px,2.2vw,30px);font-weight:700;color:var(--c)}
+.evo .gn{font-weight:600;font-size:15px}
+.evo .pics{display:flex;justify-content:center;align-items:flex-end;gap:6px;margin:8px 0}
+.evo .pics svg{height:clamp(110px,16vh,170px);width:auto}
+.evo p{font-size:13px;color:#b8c3dc;margin:0}
+@media(max-width:1000px){.evo{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.heroTower{position:absolute;right:6%;top:16%;height:52%;opacity:.95;pointer-events:none;z-index:1}
+@media(max-width:900px){.heroTower{display:none}.era{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{html,body{overflow:visible;height:auto}.slide{position:relative;opacity:1;visibility:visible;page-break-after:always}.top,.bar,.hint{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">Cellular modem study</div>
+  <div class="gens" id="gens" aria-label="Generation indicator">
+    <span style="--c:var(--g2)">2G</span><span style="--c:var(--g3)">3G</span><span style="--c:var(--g4)">4G</span><span style="--c:var(--g5)">5G</span><span style="--c:var(--g6)">6G</span>
+  </div>
+  <div class="ctl"><span id="count">1 / 24</span><button id="ovBtn" aria-label="Open slide grid">Slides</button></div>
+</header>
+
+<main class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide on" id="s1" data-title="Cellular modem engineering" data-gen="">
+  <svg class="waves" id="waves" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true"></svg>
+  <div class="in"><div class="hero">
+    <h1>Cellular modem engineering</h1>
+    <p class="lead">2G to 6G in one deck: what a modem is, how each generation reshaped it, and what a 6G modem has to do.</p>
+    <p class="mute">Status as of 21 October 2026. Arrow keys move between slides; G opens the slide grid.</p>
+  </div></div>
+</section>
+
+<!-- 2 -->
+<section class="slide" id="s2" data-title="Route through the deck" data-gen="">
+  <div class="in">
+    <h2>Route through the deck</h2>
+    <p class="lead">Foundations first, then each generation, then everything that makes 6G different, then Apple and the interview.</p>
+    <div class="grid3" style="margin-top:20px">
+      <button class="panel" data-goto="s3" style="text-align:left"><h3>1. Foundations</h3><p class="mute small">What a modem is, what it does from power-on, and why the radio channel is hard. Slides 4 to 6.</p></button>
+      <button class="panel" data-goto="s6" style="text-align:left"><h3>2. Generations</h3><p class="mute small">2G, 3G, 4G, 5G one by one, then the ladder and the evolution thread. Slides 7 to 12.</p></button>
+      <button class="panel" data-goto="s12" style="text-align:left"><h3>3. 6G today</h3><p class="mute small">Standards clock, what 3GPP has decided, IMT-2030 targets, spectrum, physics. Slides 13 to 17.</p></button>
+      <button class="panel" data-goto="s17" style="text-align:left"><h3>4. The 6G modem</h3><p class="mute small">Requirements explorer and an illustrative architecture. Slides 18 and 19.</p></button>
+      <button class="panel" data-goto="s19" style="text-align:left"><h3>5. Apple and interview</h3><p class="mute small">C-series modem history, 24 practice questions, formula sheet. Slides 20 to 22.</p></button>
+      <button class="panel" data-goto="s22" style="text-align:left"><h3>6. Study plan</h3><p class="mute small">What to learn next, which specs and books, and sources. Slides 23 and 24.</p></button>
+    </div>
+    <p class="small mute" style="margin-top:18px">Tags: <span class="tag src">Sourced</span> from a cited page, <span class="tag ana">Analysis</span> my synthesis, <span class="tag rum">Reported</span> press reporting not confirmed by the company.</p>
+  </div>
+</section>
+
+<!-- 2a -->
+<section class="slide" id="s2a" data-title="Evolution at a glance" data-gen="">
+  <div class="in">
+    <h2>Forty years of cellular telephony in one row</h2>
+    <p class="lead">Each generation changed the tower, the phone and what people did with it. Illustrations are generic silhouettes, not product renders.</p>
+    <div class="evo" id="evo"></div>
+    <p class="small mute" style="margin-top:14px">Years are first commercial launches. The 6G column is an expectation, not a finished standard. <span class="tag ana">Analysis</span></p>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="slide" id="s3" data-title="What is a modem" data-gen="">
+  <div class="in">
+    <h2>A modem turns bits into radio and radio into bits</h2>
+    <p class="lead">Modem means modulator plus demodulator. A cellular modem also runs the whole conversation with the network, so it is a radio, a signal processor and a protocol engine in one package.</p>
+    <div class="chain" role="list">
+      <div class="node dig" role="listitem"><b>Application processor</b>Apps, OS, IP stack. Hands packets to the modem over PCIe, USB or shared memory.</div>
+      <div class="node dig" role="listitem"><b>Layer 3</b>RRC and NAS: connection control, registration, bearers, mobility decisions.</div>
+      <div class="node dig" role="listitem"><b>Layer 2</b>MAC, RLC, PDCP: scheduling grants, HARQ, segmentation, ciphering, header compression.</div>
+      <div class="node dig" role="listitem"><b>Baseband PHY</b>Modulation, coding, FFT, MIMO detection, channel estimation, synchronization.</div>
+      <div class="node rf" role="listitem"><b>RF transceiver</b>ADC and DAC, mixers, PLLs, filters. Moves between baseband and carrier frequency.</div>
+      <div class="node rf" role="listitem"><b>RF front end</b>Power amplifier, LNA, switches, filters, duplexers, antenna tuners.</div>
+      <div class="node rf" role="listitem"><b>Antennas</b>Several per band; arrays and beams for millimeter wave.</div>
+    </div>
+    <div class="band"><span>Digital: software, DSP, fixed-function accelerators</span><span>Analog and RF: filters, amplifiers, antennas</span></div>
+    <div class="cols even" style="margin-top:22px">
+      <div class="rule" style="--c:var(--g4)"><b>Also inside</b>SIM or eSIM and key handling, clocks, power management interface, GNSS coexistence, and test and calibration hooks.</div>
+      <div class="rule" style="--c:var(--g6)"><b>The permanent trade-off</b>Throughput against power, silicon area, heat and cost, across dozens of bands and up to five generations at once.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide" id="s4" data-title="What a modem does" data-gen="">
+  <div class="in">
+    <h2>From power-on to a moving data session</h2>
+    <p class="lead">Click each stage. This sequence is the same in every generation; only the signals and message names change.</p>
+    <div class="steps" id="steps"></div>
+    <div class="panel" id="lifeOut" aria-live="polite"></div>
+    <div class="say"><b>Say it in an interview:</b> the modem is a closed-loop system. It measures the channel, reports it, and the network adapts. Most modem features are one side of a loop.</div>
+    <div class="fig" style="margin-top:18px"><svg id="hand" viewBox="0 0 700 330" role="img" aria-label="Message sequence between phone and tower"></svg><div class="cap">The same conversation as a sequence of messages. Names are LTE/NR style.</div></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="slide" id="s5" data-title="The channel and Shannon lab" data-gen="">
+  <div class="in">
+    <h2>The channel sets the ceiling</h2>
+    <div class="cols">
+      <div>
+        <p class="lead">Multipath fading, Doppler, noise and interference make the radio channel hostile. Shannon gives the ideal upper bound on what any modem can get out of it.</p>
+        <div class="rule" style="--c:var(--g4)"><b>Bandwidth</b>Costs spectrum and RF and baseband power. Doubling it doubles capacity.</div>
+        <div class="rule" style="--c:var(--g3)"><b>SNR</b>Costs link budget and interference control. At high SNR each 6 dB adds about 1 bit per hertz per layer.</div>
+        <div class="rule" style="--c:var(--g6)"><b>Spatial layers</b>MIMO multiplies capacity when the channel has rank. Costs antennas, compute and power.</div>
+      </div>
+      <div class="panel lab">
+        <div class="presets" id="shPre"></div>
+        <label class="row">Bandwidth<input id="shB" type="range" min="0" max="100" value="55"><output id="shBo"></output></label>
+        <label class="row">SNR<input id="shS" type="range" min="-5" max="35" value="20"><output id="shSo"></output></label>
+        <label class="row">Spatial layers<input id="shL" type="range" min="1" max="8" value="4"><output id="shLo"></output></label>
+        <div><div class="big" id="shC"></div><div class="mute small">ideal upper bound, C = layers × B × log2(1 + SNR). Real modems reach a fraction of it.</div></div>
+        <div class="kpis" id="shK"></div>
+      </div>
+    </div>
+    <div class="fig" style="margin-top:18px"><svg id="multi" viewBox="0 0 700 230" role="img" aria-label="Direct and reflected radio paths between a tower and a moving phone"></svg><div class="cap">One transmitted signal arrives as several copies with different delays (multipath) and a frequency shift that depends on speed (Doppler).</div></div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="slide" id="s6" data-title="2G: digital voice" data-gen="2">
+  <div class="in">
+    <h2 style="color:var(--g2)">2G: digital voice, shared by time</h2>
+    <div class="cols">
+      <div>
+        <p class="lead">GSM digitized voice and let eight users take turns on each 200 kHz carrier. Time slots separate users; different carriers separate cells.</p>
+        <div class="specs" style="--c:var(--g2)"><span class="spec">Access <b>TDMA + FDMA</b></span><span class="spec">Carrier <b>200 kHz</b></span><span class="spec">Modulation <b>GMSK</b>, 8PSK in EDGE</span><span class="spec">Data <b>9.6 kbps</b> circuit; GPRS up to ~171 kbps; EDGE up to ~384 kbps</span></div>
+        <div class="rule" style="--c:var(--g2)"><b>What the modem pays</b>Equalizer (Viterbi / MLSE) against multipath, frequency hopping, timing advance. Small DSP, tiny power budget.</div>
+        <div class="say"><b>Say it:</b> 2G taught the core timing lesson. Users far from the tower must transmit early (timing advance) so their slot lands in the right place.</div>
+      </div>
+      <div class="fig">
+        <svg viewBox="0 0 640 250" role="img" aria-label="GSM TDMA frame with eight timeslots">
+          <text x="8" y="22" fill="#8d99b4" font-size="14">One TDMA frame, 4.615 ms</text>
+          <g id="tdma"></g>
+          <text x="8" y="168" fill="#8d99b4" font-size="14">One carrier, 200 kHz wide, shared by 8 users</text>
+          <rect x="8" y="180" width="624" height="34" rx="6" style="fill:var(--g2);opacity:.25"/>
+          <text x="320" y="203" text-anchor="middle" fill="#cfd8ec" font-size="14">200 kHz carrier</text>
+        </svg>
+        <div class="cap">Each slot lasts about 577 µs. The highlighted slot belongs to one phone; it transmits a burst once per frame.</div>
+      </div>
+    </div>
+    <div class="era" data-era="2"></div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="slide" id="s7" data-title="3G: spread spectrum data" data-gen="3">
+  <div class="in">
+    <h2 style="color:var(--g3)">3G: everyone talks at once, separated by codes</h2>
+    <div class="cols">
+      <div>
+        <p class="lead">UMTS spread every user across the full 5 MHz. Unique spreading codes keep them apart, so interference, not time slots, becomes the capacity limit.</p>
+        <div class="specs" style="--c:var(--g3)"><span class="spec">Access <b>WCDMA</b></span><span class="spec">Carrier <b>5 MHz</b>, 3.84 Mcps</span><span class="spec">R99 <b>384 kbps</b> typical</span><span class="spec">HSDPA <b>~14 Mbps</b>, 16QAM, HARQ, 2 ms TTI</span><span class="spec">HSPA+ <b>42 Mbps+</b>, 64QAM, MIMO, dual carrier</span></div>
+        <div class="rule" style="--c:var(--g3)"><b>What the modem pays</b>Rake receiver to combine multipath, closed-loop power control at 1500 Hz, soft handover, chip-rate processing, 2G fallback. Multi-mode begins here.</div>
+        <div class="say"><b>Say it:</b> CDMA trades frequency planning for power control. The near-far problem is why every phone must transmit only as loud as needed.</div>
+      </div>
+      <div class="fig">
+        <svg viewBox="0 0 640 260" role="img" aria-label="Several users spread across the same 5 MHz band">
+          <text x="8" y="22" fill="#8d99b4" font-size="14">A data bit is multiplied by a fast code (chips)</text>
+          <rect x="8" y="34" width="70" height="44" rx="4" style="fill:var(--g3);opacity:.9"/>
+          <text x="43" y="62" text-anchor="middle" fill="#06101a" font-size="13" font-weight="700">1 bit</text>
+          <text x="96" y="62" fill="#cfd8ec" font-size="22">×</text>
+          <g id="chips"></g>
+          <text x="8" y="130" fill="#8d99b4" font-size="14">Result: each user fills the whole 5 MHz, overlapping the others</text>
+          <g id="layers"></g>
+        </svg>
+        <div class="cap">Receivers recover one user by correlating with that user's code; the others look like noise.</div>
+      </div>
+    </div>
+    <div class="era" data-era="3"></div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="slide" id="s8" data-title="4G: OFDM broadband" data-gen="4">
+  <div class="in">
+    <h2 style="color:var(--g4)">4G: many narrow subcarriers, one flat channel each</h2>
+    <div class="cols">
+      <div>
+        <p class="lead">LTE splits the band into 15 kHz subcarriers that are orthogonal. Each sees a flat channel, so one complex multiply per subcarrier equalizes it. A cyclic prefix absorbs delay spread.</p>
+        <div class="specs" style="--c:var(--g4)"><span class="spec">Downlink <b>OFDMA</b></span><span class="spec">Uplink <b>SC-FDMA</b></span><span class="spec">Carrier <b>up to 20 MHz</b></span><span class="spec">TTI <b>1 ms</b></span><span class="spec">MIMO <b>up to 4×4</b>, 256QAM, turbo code</span><span class="spec">LTE-A <b>carrier aggregation</b></span></div>
+        <div class="rule" style="--c:var(--g4)"><b>What the modem pays</b>FFT engines, MIMO detection, turbo decoder throughput, dozens of bands, carrier-aggregation band combinations in the RF, IMS for VoLTE.</div>
+        <div class="say"><b>Say it:</b> uplink uses SC-FDMA because a lower peak-to-average power ratio lets the phone's amplifier run efficiently. That is battery and coverage.</div>
+      </div>
+      <div class="fig">
+        <svg id="ofdm" viewBox="0 0 640 260" role="img" aria-label="Orthogonal OFDM subcarrier spectra"></svg>
+        <div class="cap">Each curve is one subcarrier. At every subcarrier's peak, all the others are exactly zero, so they do not interfere.</div>
+      </div>
+    </div>
+    <div class="era" data-era="4"></div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="slide" id="s9" data-title="5G NR: flexibility" data-gen="5">
+  <div class="in">
+    <h2 style="color:var(--g5)">5G NR: flexible numerology, beams, two spectrum worlds</h2>
+    <div class="cols">
+      <div>
+        <p class="lead">NR keeps OFDM but makes it configurable. Subcarrier spacing scales, slots shrink for low latency, and millimeter wave adds beamforming as a core modem job.</p>
+        <div class="specs" style="--c:var(--g5)"><span class="spec">FR1 <b>up to 100 MHz</b> carriers</span><span class="spec">FR2 <b>24.25–52.6 GHz</b>, up to 400 MHz</span><span class="spec">Coding <b>LDPC</b> data, <b>Polar</b> control</span><span class="spec">Modes <b>NSA (EN-DC)</b> and <b>SA</b></span><span class="spec">IMT-2020 <b>20 Gbps</b>, ~1 ms</span></div>
+        <div class="rule" style="--c:var(--g5)"><b>What the modem pays</b>Beam management, wide-bandwidth ADCs and FFT, LDPC throughput, two radios active under EN-DC, mmWave heat, UE power-saving features.</div>
+        <div class="say"><b>Say it:</b> subcarrier spacing = 15 × 2<sup>μ</sup> kHz, slot = 1 / 2<sup>μ</sup> ms. Higher μ is for millimeter wave and low latency.</div>
+      </div>
+      <div class="fig">
+        <svg viewBox="0 0 640 230" role="img" aria-label="Beams fanning out from a base station">
+          <g id="beams"></g>
+        </svg>
+        <table class="matrix" style="margin-top:8px">
+          <thead style="--c:var(--g5)"><tr><th>μ</th><th>0</th><th>1</th><th>2</th><th>3</th></tr></thead>
+          <tbody><tr><th>Spacing</th><td>15 kHz</td><td>30 kHz</td><td>60 kHz</td><td>120 kHz</td></tr><tr><th>Slot</th><td>1 ms</td><td>0.5 ms</td><td>0.25 ms</td><td>0.125 ms</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="era" data-era="5"></div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="slide" id="s10" data-title="The ladder: rate and bandwidth" data-gen="" >
+  <div class="in">
+    <h2>Each generation bought roughly 10 to 50 times the peak rate</h2>
+    <p class="lead">Peak rates are specification targets under ideal conditions. They show direction and ratio, not what a user sees.</p>
+    <div class="cols even">
+      <div class="fig"><svg id="chRate" viewBox="0 0 640 320" role="img" aria-label="Peak data rate by generation on a log scale"></svg><div class="cap">Peak data rate, log scale. 2G is EDGE, 3G is HSPA+ (R8), 4G is LTE-Advanced, 5G is the IMT-2020 target, 6G is the top of the IMT-2030 range (50 to 200 Gbps by scenario).</div></div>
+      <div class="fig"><svg id="chBw" viewBox="0 0 640 320" role="img" aria-label="Carrier bandwidth by generation on a log scale"></svg><div class="cap">Single-carrier bandwidth, log scale. LTE aggregates carriers beyond 20 MHz; NR FR2 reaches 400 MHz per carrier.</div></div>
+    </div>
+    <div class="say"><b>Say it:</b> rate = bandwidth × spectral efficiency × layers. Look at which factor each generation pulled: 3G bandwidth, 4G spectral efficiency and layers, 5G bandwidth again.</div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section class="slide" id="s11" data-title="Evolution thread" data-gen="">
+  <div class="in">
+    <h2>The evolution thread, side by side</h2>
+    <div class="scroll"><table class="matrix">
+      <thead><tr><th></th><th style="--c:var(--g2)">2G</th><th style="--c:var(--g3)">3G</th><th style="--c:var(--g4)">4G</th><th style="--c:var(--g5)">5G</th><th style="--c:var(--g6)">6G (direction)</th></tr></thead>
+      <tbody>
+        <tr><th>Access</th><td>TDMA / FDMA</td><td>CDMA</td><td>OFDMA, SC-FDMA</td><td>OFDMA, DFT-s-OFDM uplink option</td><td>CP-OFDM downlink; CP-OFDM and DFT-s-OFDM uplink <span class="tag src">Sourced</span></td></tr>
+        <tr><th>Carrier</th><td>200 kHz</td><td>5 MHz</td><td>≤ 20 MHz</td><td>≤ 100 MHz (FR1), ≤ 400 MHz (FR2)</td><td>Wider carriers; upper mid-band in focus</td></tr>
+        <tr><th>Coding</th><td>Convolutional</td><td>Convolutional, turbo</td><td>Turbo</td><td>LDPC data, Polar control</td><td>5G codes largely reused <span class="tag src">Sourced</span></td></tr>
+        <tr><th>Antennas</th><td>1</td><td>1–2</td><td>≤ 4×4</td><td>Massive MIMO, beams</td><td>Larger arrays, extreme MIMO under study</td></tr>
+        <tr><th>Latency unit</th><td>4.6 ms frame</td><td>2 ms TTI (HSDPA)</td><td>1 ms TTI</td><td>≤ 1 ms slot, mini-slots</td><td>Targets set by IMT-2030 HRLLC</td></tr>
+        <tr><th>Core</th><td>Circuit</td><td>Circuit + packet</td><td>All-IP EPC</td><td>Service-based, cloud-native</td><td>New 6G core, AI and sensing aware</td></tr>
+        <tr><th>Modem pays</th><td>Equalizer</td><td>Rake, power control</td><td>FFT, MIMO, turbo, CA</td><td>Beams, LDPC, mmWave heat</td><td>AI inference, wider RF, sensing <span class="tag ana">Analysis</span></td></tr>
+      </tbody></table></div>
+    <div class="cols even" style="margin-top:20px">
+      <div>
+        <h3>What limited each generation</h3>
+        <div class="rule" style="--c:var(--g2)"><b>2G</b>Voice only, circuit-switched.</div>
+        <div class="rule" style="--c:var(--g3)"><b>3G</b>Interference between users sharing the band.</div>
+        <div class="rule" style="--c:var(--g4)"><b>4G</b>Spectral efficiency and bandwidth per carrier.</div>
+        <div class="rule" style="--c:var(--g5)"><b>5G</b>Peak rate, latency and flexibility across very different bands.</div>
+        <div class="rule" style="--c:var(--g6)"><b>6G</b>Energy per bit, coverage at new frequencies, and intelligence in the loop. <span class="tag ana">Analysis</span></div>
+      </div>
+      <div>
+        <h3>Patterns to internalize</h3>
+        <ul class="tight">
+          <li>Each generation raises bandwidth and spectral efficiency; the modem pays in compute and power.</li>
+          <li>Intelligence moves toward the edge: fast scheduling and HARQ in 3G, beam management in 5G, learned PHY functions next.</li>
+          <li>Backward compatibility is a tax: a 6G phone modem will be five-mode.</li>
+          <li>New spectrum forces new RF architecture and coexistence work.</li>
+          <li>In a phone, power and heat limit throughput long before the standard does.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="slide" id="s12" data-title="Standards clock to 6G" data-gen="6">
+  <div class="in">
+    <h2 style="color:var(--g6)">The clock to 6G</h2>
+    <p class="lead">3GPP is using two releases: Release 20 for studies, Release 21 for the first normative 6G work. Commercial service is widely expected around 2030.</p>
+    <div class="fig"><svg id="clock" viewBox="0 0 900 330" role="img" aria-label="Timeline of 6G standardization 2025 to 2031"></svg>
+      <div class="cap">Dates move. A recent 3GPP plenary readout puts the Release 20 6G study running through June 2027; earlier plans showed a different Release 21 schedule. Check the 3GPP work plan before quoting a date. <span class="tag src">Sourced</span> The ITU bar is approximate. <span class="tag ana">Analysis</span></div></div>
+    <div class="era" data-era="6"></div>
+  </div>
+</section>
+
+<!-- 13 -->
+<section class="slide" id="s13" data-title="What 3GPP has decided" data-gen="6">
+  <div class="in">
+    <h2 style="color:var(--g6)">The 6G air interface looks a lot like 5G</h2>
+    <p class="lead">The headline from the first agreements: the physical layer is evolutionary. The big changes are in system design, AI, sensing and spectrum.</p>
+    <div class="cols even">
+      <div class="panel">
+        <h3>Settled or agreed <span class="tag src">Sourced</span></h3>
+        <ul class="tight">
+          <li>CP-OFDM in the downlink; CP-OFDM and DFT-s-OFDM in the uplink. DFT-s-OFDM gives better phone coverage.</li>
+          <li>5G channel codes (LDPC and Polar) largely reused, with possible extensions.</li>
+          <li>A new radio access technology with standalone operation, not backward compatible with NR (called 6GR in the study).</li>
+          <li>Avoid defining several numerologies for the same frequency band.</li>
+          <li>AI/ML must have a non-AI fallback so service holds when AI features are absent.</li>
+          <li>Sensing is studied as a native air-interface capability: waveform, reference signals, measurement feedback.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Still open or to verify <span class="tag ana">Analysis</span></h3>
+        <ul class="tight">
+          <li>Modulation details, reference signal structure and supported bandwidths: the milestone list names them, so read the outcome in the RAN1 study report (TR 38.760-1).</li>
+          <li>Which AI/ML use cases become normative and how models are managed across vendors.</li>
+          <li>How sensing coexists with communication in a phone modem.</li>
+          <li>RAN and core functional split, and how NTN fits natively.</li>
+          <li>Security framework beyond control-message protection.</li>
+        </ul>
+        <p class="small mute">Key documents: TR 38.914 (scenarios and requirements), TR 38.760-1 (6G radio, RAN1), TS 22.270 (system requirements, draft), TR 22.870 (use cases), TR 23.801-01 (architecture).</p>
+      </div>
+    </div>
+    <div class="say"><b>Say it:</b> if asked what changes in the modem, do not start with a new waveform. Start with wider spectrum, AI with fallback, sensing, NTN and energy per bit.</div>
+  </div>
+</section>
+
+<!-- 14 -->
+<section class="slide" id="s14" data-title="IMT-2030 targets" data-gen="6">
+  <div class="in">
+    <h2 style="color:var(--g6)">What ITU asks of 6G</h2>
+    <div class="cols">
+      <div class="fig"><svg id="hex" viewBox="0 0 440 400" role="img" aria-label="Six IMT-2030 usage scenarios"></svg>
+        <div class="cap">Three scenarios extend 5G (violet); three are new (pink). Recommendation ITU-R M.2160. <span class="tag src">Sourced</span></div></div>
+      <div>
+        <p class="lead">IMT-2030 sets 15 capabilities: 9 enhanced from 5G and 6 new (coverage, positioning, sensing, AI, sustainability, interoperability). ITU's working party has agreed a draft of 20 technical performance requirements.</p>
+        <div id="capBars"></div>
+        <p class="small mute">Targets vary by usage scenario; bars show the 6G range against the 5G figure. Latency: IMT-2020 set 1 ms user-plane; the 6G number depends on the scenario and is still in the requirements work.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 15 -->
+<section class="slide" id="s15" data-title="Spectrum map" data-gen="6">
+  <div class="in">
+    <h2 style="color:var(--g6)">Where 6G is looking for spectrum</h2>
+    <div class="fig"><svg id="spec" viewBox="0 0 900 300" role="img" aria-label="Frequency map from 0.4 to 400 GHz"></svg>
+      <div class="cap">Log frequency axis. WRC-27 agenda item 1.7 studies 4.4–4.8, 7.125–8.4 and 14.8–15.35 GHz; WRC-23 identified upper 6 GHz (6.425–7.125) for IMT in some regions. <span class="tag src">Sourced</span></div></div>
+    <div class="cols even" style="margin-top:16px">
+      <div class="rule" style="--c:var(--g6)"><b>Why the 7 to 15 GHz range</b>More than 2 GHz of possible spectrum with propagation closer to bands below 7 GHz than to millimeter wave, so existing sites can be reused. The costs: weaker uplink coverage and larger arrays.</div>
+      <div class="rule" style="--c:var(--amber)"><b>It is not settled</b>Regulators differ: CEPT and the UK have been skeptical of the case for more spectrum, while the US is pushing 7 and 8 GHz. Outcomes come at WRC-27 in late 2027.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 -->
+<section class="slide" id="s16" data-title="Physics lab" data-gen="6">
+  <div class="in">
+    <h2 style="color:var(--g6)">What a higher carrier does to the link</h2>
+    <div class="cols">
+      <div class="panel lab">
+        <div class="presets" id="phPre"></div>
+        <label class="row">Frequency<input id="phF" type="range" min="0" max="100" value="38"><output id="phFo"></output></label>
+        <label class="row">Speed<input id="phV" type="range" min="0" max="1000" step="10" value="500"><output id="phVo"></output></label>
+        <label class="row">Distance<input id="phD" type="range" min="10" max="2000" step="10" value="500"><output id="phDo"></output></label>
+        <div class="kpis" id="phK"></div>
+      </div>
+      <div>
+        <div class="fig"><svg id="phC" viewBox="0 0 520 240" role="img" aria-label="Free-space path loss versus frequency"></svg><div class="cap">Free-space path loss between isotropic antennas at the chosen distance.</div></div>
+        <div class="say" id="phT"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 -->
+<section class="slide" id="s17" data-title="6G modem requirements" data-gen="6">
+  <div class="in">
+    <h2 style="color:var(--g6)">What a 6G modem has to handle</h2>
+    <p class="lead">Pick an area. Each entry says what the modem must do, why it is hard, and the question an interviewer is likely to ask.</p>
+    <div class="cols">
+      <div class="steps" id="reqBtns" style="flex-direction:column;align-items:stretch"></div>
+      <div class="panel" id="reqOut" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 18 -->
+<section class="slide" id="s18" data-title="Illustrative 6G modem architecture" data-gen="6">
+  <div class="in">
+    <h2 style="color:var(--g6)">An illustrative 6G modem</h2>
+    <p class="lead">Pink blocks are what changes against a 5G modem. This is my synthesis from the study direction, not an Apple or 3GPP design. <span class="tag ana">Analysis</span></p>
+    <div class="arch">
+      <div class="lane"><div class="lab">Host</div><div class="blk">Application processor, OS, IP stack</div></div>
+      <div class="lane"><div class="lab">Layers 2 and 3</div>
+        <div class="blk">RRC, NAS, mobility</div><div class="blk">MAC, RLC, PDCP, HARQ</div><div class="blk new">AI/ML lifecycle: model selection, monitoring, switch to fallback</div></div>
+      <div class="lane"><div class="lab">Physical layer</div>
+        <div class="blk">FFT / IFFT, DFT spreading</div><div class="blk">MIMO detection, precoding</div><div class="blk">LDPC, Polar codecs</div><div class="blk">Sync, channel estimation</div>
+        <div class="blk new">Neural inference path: CSI, beams, channel estimation</div><div class="blk new">Non-AI fallback path (required)</div><div class="blk new">Sensing pipeline: reference signals, measurements</div></div>
+      <div class="lane"><div class="lab">RF</div>
+        <div class="blk">Sub-6 GHz paths, 2G to 5G</div><div class="blk">mmWave paths</div><div class="blk new">Upper mid-band path, wide ADC / DAC</div><div class="blk new">NTN: Doppler and delay pre-compensation</div></div>
+    </div>
+    <p class="small mute" style="margin-top:12px">Design pressure to remember: every pink block draws power and area, and all of them share one thermal budget in a thin phone.</p>
+  </div>
+</section>
+
+<!-- 19 -->
+<section class="slide" id="s19" data-title="Apple context" data-gen="">
+  <div class="in">
+    <h2>Where Apple's own modem stands</h2>
+    <div class="cols">
+      <div>
+        <div class="rule" style="--c:var(--g4)"><b>Feb 2025: C1</b>First in-house modem, in iPhone 16e. Apple calls it the most power-efficient modem ever in an iPhone. Sub-6 GHz 5G only. <span class="tag src">Sourced</span></div>
+        <div class="rule" style="--c:var(--g4)"><b>Sep 2025: C1X</b>Variant in iPhone Air, later iPhone 17e. <span class="tag src">Sourced</span></div>
+        <div class="rule" style="--c:var(--g5)"><b>Sep 2026: C2</b>In iPhone 18 Pro; adds mmWave and is reported to use about 15% less power than C1X. <span class="tag src">Sourced</span></div>
+        <div class="rule" style="--c:var(--amber)"><b>Not fully switched over</b>A teardown of the iPhone 18 Pro Max reportedly found a Qualcomm Snapdragon X80, so Apple's modem does not yet cover the whole lineup. <span class="tag rum">Reported</span></div>
+        <div class="rule" style="--c:var(--g6)"><b>2027 and later: C3, SoC integration</b>C3 (codename Prometheus) is expected in 2027; reports describe a longer plan to fold the modem into Apple silicon. <span class="tag rum">Reported</span></div>
+      </div>
+      <div class="panel">
+        <h3>What this means for a modem engineer</h3>
+        <ul class="tight">
+          <li>Apple's pitch is efficiency and integration with its own silicon, so expect questions about energy per bit, thermal limits and power states.</li>
+          <li>The team is still closing feature gaps with the incumbent (mmWave arrived in C2), so breadth across the standard matters.</li>
+          <li>6G prep is a long game: first normative specs arrive around 2029, and a phone modem follows later. Show you can reason from the study documents.</li>
+        </ul>
+        <p class="small mute">Earlier Bloomberg reporting said Apple had posted 6G-related roles, including a 6G reference architecture position. <span class="tag rum">Reported</span></p>
+        <p class="small mute">Apple confirms its own products and claims; roadmap items beyond that come from press and can change.</p>
+      </div>
+    </div>
+    <div class="fig" style="margin-top:18px"><h3 style="margin:2px 4px 0">iPhones through the cellular generations</h3><div class="evo" id="iph" style="grid-template-columns:repeat(5,minmax(0,1fr))"></div><div class="cap">Generic silhouettes by design era, not product renders. First-iPhone-per-generation dates from Apple's public history; C1 per Apple.</div></div>
+  </div>
+</section>
+
+<!-- 20 -->
+<section class="slide" id="s20" data-title="Interview practice" data-gen="">
+  <div class="in">
+    <h2>24 questions to rehearse out loud</h2>
+    <p class="lead">Click a card to reveal a model answer. Say your own answer first.</p>
+    <div class="filters" id="qFilters"></div>
+    <div class="qa" id="qa"></div>
+  </div>
+</section>
+
+<!-- 21 -->
+<section class="slide" id="s21" data-title="Formula sheet" data-gen="">
+  <div class="in">
+    <h2>Formulas you should be able to derive</h2>
+    <div class="grid3">
+      <div class="panel"><h3>Shannon capacity</h3><p><b>C = B · log₂(1 + SNR)</b></p><p class="small mute">MIMO: about min(Nt, Nr) layers × this, when the channel has rank. 100 MHz at 20 dB: 100 × 6.66 = 666 Mbps per layer.</p></div>
+      <div class="panel"><h3>OFDM timing</h3><p><b>T<sub>sym</sub> = 1 / Δf</b>, <b>Δf = 15 · 2<sup>μ</sup> kHz</b></p><p class="small mute">15 kHz → 66.7 µs useful symbol. Cyclic prefix must exceed delay spread.</p></div>
+      <div class="panel"><h3>Doppler</h3><p><b>f<sub>d</sub> = v · f<sub>c</sub> / c</b></p><p class="small mute">500 km/h at 7 GHz: 138.9 m/s × 7 GHz / c ≈ 3.24 kHz, about 22% of a 15 kHz subcarrier.</p></div>
+      <div class="panel"><h3>Free-space path loss</h3><p><b>FSPL = 20 log₁₀(4π d f / c)</b></p><p class="small mute">Doubling frequency adds 6 dB between isotropic antennas. Same-area arrays recover it with beamforming gain.</p></div>
+      <div class="panel"><h3>Noise floor and sensitivity</h3><p><b>N = −174 dBm/Hz + 10 log₁₀(B) + NF</b></p><p class="small mute">20 MHz, NF 7 dB: −174 + 73 + 7 = −94 dBm. Sensitivity = N + required SNR.</p></div>
+      <div class="panel"><h3>Subcarriers and sampling</h3><p><b>f<sub>s</sub> = N<sub>FFT</sub> · Δf</b></p><p class="small mute">LTE 20 MHz: 2048 × 15 kHz = 30.72 MHz. Check your FFT size against the carrier before sizing the ADC.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 22 -->
+<section class="slide" id="s22" data-title="Study plan" data-gen="">
+  <div class="in">
+    <h2>What to study next</h2>
+    <p class="lead">Tick items as you finish them; progress is saved in this browser.</p>
+    <div class="grid3" id="plan"></div>
+  </div>
+</section>
+
+<!-- 23 -->
+<section class="slide" id="s23" data-title="Sources" data-gen="">
+  <div class="in">
+    <h2>Sources</h2>
+    <div class="cols even">
+      <div>
+        <h3>Standards and bodies</h3>
+        <ul class="tight small">
+          <li><a href="https://www.3gpp.org/specifications-technologies/releases/release-20">3GPP Release 20</a></li>
+          <li><a href="https://www.3gpp.org/news-events/3gpp-news/sa-rel20">3GPP TSG SA: Rel-20 planning</a></li>
+          <li><a href="https://www.3gpp.org/news-events/3gpp-news/sa1-6g-road">3GPP SA1: road to 6G</a></li>
+          <li><a href="https://www.ericsson.com/en/blog/2026/6/6g-standardization-key-milestones-and-ran-decisions">Ericsson: 6G standardization milestones and RAN decisions (June 2026)</a></li>
+          <li><a href="https://www.keysight.com/blogs/en/inds/6g-takeaways-3gpp-release-21-tsg-112">Keysight: road to Release 21 (TSG #112)</a></li>
+          <li><a href="https://6gworld.com/3gpp-in-fukuoka-6g-moves-closer-to-real-standards-work/">6GWorld: 3GPP in Fukuoka</a></li>
+          <li><a href="https://arxiv.org/pdf/2506.11828">A tale of two mobile generations: 5G-Advanced and 6G in Release 20</a></li>
+          <li><a href="https://the-mobile-network.com/?p=24039">The Mobile Network: 6G waveform agreement</a></li>
+          <li><a href="https://www.itu.int/hub/?p=64012">ITU: IMT-2030 technical requirements</a></li>
+          <li><a href="https://techblog.comsoc.org/2026/10/17/oct-2026-preliminary-draft-new-itu-r-wp-5d-report-m-imt-2030-submission/">IEEE ComSoc: draft ITU-R IMT-2030 submission report (Oct 2026)</a></li>
+          <li><a href="https://arxiv.org/pdf/2407.09398">6G: the intelligent network of everything (IMT-2030 capabilities)</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Spectrum and Apple</h3>
+        <ul class="tight small">
+          <li><a href="https://www.nokia.com/about-us/newsroom/articles/6g-mid-band-spectrum-technology-explained/">Nokia: 6G mid-band spectrum explained</a></li>
+          <li><a href="https://www.policytracker.com/?p=93269">Policy Tracker: WRC-27 agenda item 1.7</a></li>
+          <li><a href="https://techgoondu.com/2023/08/18/exploring-the-spectrum-landscape-of-6g">Keysight via Techgoondu: 6G spectrum landscape</a></li>
+          <li><a href="https://www.macrumors.com/2026/09/09/iphone-18-pro-different-modem/">MacRumors: iPhone 18 Pro and Pro Max modems</a></li>
+          <li><a href="https://bdnews24.com/technology/otve0x7lqw">bdnews24: iPhone 18 Pro modem split</a></li>
+          <li><a href="https://tomsguide.com/news/apple-has-reportedly-started-work-on-a-6g-modem-heres-what-we-know">Tom's Guide: Apple 6G modem work</a></li>
+        </ul>
+        <p class="small mute">The 2G to 5G generation figures, the formula sheet and the interview answers are standard engineering knowledge written from memory and not individually sourced. Verify exact figures against 3GPP specifications before quoting them in an interview.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.arch{display:grid;gap:10px;margin-top:10px}
+.arch .lane{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.arch .lab{flex:0 0 130px;font-family:var(--head);color:var(--mute);align-self:center;font-size:15px}
+.arch .blk{flex:1 1 150px;padding:9px 11px;border-radius:8px;background:#15213c;border:1px solid #243457;font-size:14px}
+.arch .blk.new{background:#2c1230;border-color:var(--g6);box-shadow:0 0 0 1px rgba(255,79,139,.25)}
+.cb{display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:center;margin:0 0 12px;font-size:14px}
+.cb .tr{position:relative;height:26px;border-radius:6px;background:#0c1224;overflow:hidden;margin:2px 0}
+.cb .tr i{position:absolute;left:0;top:0;bottom:0;font-style:normal;font-size:12px;line-height:26px;padding-left:8px;white-space:nowrap}
+</style>
+</main>
+
+<div class="bar"><i id="prog"></i></div>
+<div class="hint">← → move · G slide grid · F fullscreen</div>
+<div class="overview" id="overview" hidden><h2>All slides</h2><div class="ovg" id="ovg"></div></div>
+
+<script>
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var NS="http://www.w3.org/2000/svg";
+var GCOL={2:"#8393b2",3:"#3ddc97",4:"#3aa8ff",5:"#9b7bff",6:"#ff4f8b"};
+
+/* ---------- deck engine ---------- */
+var slides=$$(".slide"), cur=0;
+function show(i,noHash){
+  i=Math.max(0,Math.min(slides.length-1,i)); cur=i;
+  slides.forEach(function(s,k){s.classList.toggle("on",k===i)});
+  var s=slides[i]; s.scrollTop=0;
+  $("#count").textContent=(i+1)+" / "+slides.length;
+  $("#prog").style.width=((i+1)/slides.length*100)+"%";
+  var g=s.getAttribute("data-gen");
+  $$("#gens span").forEach(function(el,k){el.classList.toggle("on",g!==""&&(k+2)===Number(g))});
+  $$("#ovg button").forEach(function(b,k){b.classList.toggle("cur",k===i)});
+  if(!noHash){try{history.replaceState(null,"","#"+s.id)}catch(e){}}
+  if(window.onShow){window.onShow(s.id)}
+}
+function go(id){var i=slides.findIndex(function(s){return s.id===id}); if(i>=0)show(i)}
+document.addEventListener("keydown",function(e){
+  if(e.target.matches&&e.target.matches("input,textarea,select")&&(e.key==="ArrowLeft"||e.key==="ArrowRight"))return;
+  var k=e.key;
+  if(k==="ArrowRight"||k==="PageDown"||k===" "&&!(e.target.matches&&e.target.matches("button"))){e.preventDefault();show(cur+1)}
+  else if(k==="ArrowLeft"||k==="PageUp"){e.preventDefault();show(cur-1)}
+  else if(k==="Home"){show(0)} else if(k==="End"){show(slides.length-1)}
+  else if(k==="g"||k==="G"){toggleOv()}
+  else if(k==="Escape"){$("#overview").hidden=true}
+  else if(k==="f"||k==="F"){if(document.fullscreenElement){document.exitFullscreen()}else if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen()}}
+});
+var tx=null;
+document.addEventListener("touchstart",function(e){tx=e.touches[0].clientX},{passive:true});
+document.addEventListener("touchend",function(e){if(tx===null)return;var dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)>70&&!e.target.closest("input,svg,.scroll")){show(cur+(dx<0?1:-1))}},{passive:true});
+function toggleOv(){var o=$("#overview");o.hidden=!o.hidden}
+$("#ovBtn").addEventListener("click",toggleOv);
+slides.forEach(function(s,i){var b=document.createElement("button");b.innerHTML="<b>"+(i+1)+"</b>"+s.getAttribute("data-title");b.addEventListener("click",function(){$("#overview").hidden=true;show(i)});$("#ovg").appendChild(b)});
+$$("[data-goto]").forEach(function(b){b.addEventListener("click",function(){go(b.getAttribute("data-goto"))})});
+
+/* ---------- helpers ---------- */
+function mk(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs){e.setAttribute(k,attrs[k])}if(parent)parent.appendChild(e);return e}
+function strip(s){return s.indexOf(".")>=0?s.replace(/\.?0+$/,""):s}
+function fmtRate(mbps){if(mbps>=1000)return strip((mbps/1000).toPrecision(3))+" Gbps";if(mbps>=1)return strip(mbps.toPrecision(3))+" Mbps";return strip((mbps*1000).toPrecision(3))+" kbps"}
+
+/* ---------- title waves ---------- */
+(function(){
+  var svg=$("#waves"),cfg=[[2,1.4],[3,2.8],[4,5.5],[5,11],[6,22]],paths=[],t0=0,run=true;
+  cfg.forEach(function(c,i){paths.push(mk("path",{fill:"none","stroke":GCOL[c[0]],"stroke-width":2.2,"stroke-linecap":"round",opacity:.85},svg))});
+  function draw(t){
+    cfg.forEach(function(c,i){
+      var amp=70-i*9,base=60+i*46,d="";
+      for(var x=0;x<=1200;x+=6){var y=base+Math.sin(x/1200*Math.PI*2*c[1]+t*(0.6+i*0.25))*amp*0.5;d+=(x?"L":"M")+x+" "+y.toFixed(1)}
+      paths[i].setAttribute("d",d)
+    })
+  }
+  draw(0);
+  var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!reduce){(function loop(ts){if(slides[cur].id==="s1"){draw(ts/1000)}requestAnimationFrame(loop)})(0)}
+})();
+
+/* ---------- lifecycle ---------- */
+(function(){
+  var S=[
+    ["Power on and band scan","Scan stored frequency lists first, then wider. Measure received power and shortlist the strongest carriers."],
+    ["Synchronize","Detect the primary and secondary synchronization signals to get frame timing and the physical cell ID. In NR the SS/PBCH block also carries a beam index."],
+    ["Read system information","Decode the MIB, then the SIBs: bandwidth, random-access settings, cell access rules, neighbor lists."],
+    ["Random access","Send a preamble on PRACH, receive timing advance and an uplink grant, then complete RRC setup."],
+    ["Register","NAS registration or attach: authenticate with the SIM, receive an IP bearer or PDU session."],
+    ["Exchange data","The network schedules. The modem reports channel quality (CQI/CSI), the network picks modulation and rank (link adaptation), HARQ retransmits errors, power control keeps uplink just strong enough."],
+    ["Move and sleep","Measure neighbors and report or reselect, hand over without dropping the session. DRX lets the radio sleep between wake-ups to save battery."]
+  ],box=$("#steps"),out=$("#lifeOut");
+  function pick(i){$$("button",box).forEach(function(b,k){b.setAttribute("aria-pressed",k===i)});out.innerHTML="<h3>"+(i+1)+". "+S[i][0]+"</h3><p>"+S[i][1]+"</p>"}
+  S.forEach(function(s,i){var b=document.createElement("button");b.innerHTML="<span>"+(i+1)+"</span>"+s[0];b.addEventListener("click",function(){pick(i)});box.appendChild(b)});
+  pick(0);
+})();
+
+/* ---------- Shannon lab ---------- */
+(function(){
+  var B=$("#shB"),S=$("#shS"),L=$("#shL");
+  function bw(){return 0.2*Math.pow(2000,Number(B.value)/100)}
+  function cap(b,s,l){return l*b*Math.log2(1+Math.pow(10,s/10))}
+  function upd(){
+    var b=bw(),s=Number(S.value),l=Number(L.value),c=cap(b,s,l);
+    $("#shBo").textContent=(b<10?b.toFixed(1):Math.round(b))+" MHz";$("#shSo").textContent=s+" dB";$("#shLo").textContent=l;
+    $("#shC").textContent=fmtRate(c);
+    var base=c;function pct(x){return "+"+Math.round((x/base-1)*100)+"%"}
+    $("#shK").innerHTML=
+      '<div class="kpi"><b>'+Math.log2(1+Math.pow(10,s/10)).toFixed(2)+'</b><span>bits per Hz per layer</span></div>'+
+      '<div class="kpi"><b>'+pct(cap(b*2,s,l))+'</b><span>if bandwidth doubles</span></div>'+
+      '<div class="kpi"><b>'+pct(cap(b,s+3,l))+'</b><span>if SNR rises 3 dB</span></div>'+
+      '<div class="kpi"><b>'+pct(cap(b,s,l*2))+'</b><span>if layers double</span></div>'
+  }
+  [["GSM",0.2,1],["UMTS",5,1],["LTE 20 MHz 4×4",20,4],["NR FR1 100 MHz",100,4],["NR FR2 400 MHz",400,2]].forEach(function(p){
+    var b=document.createElement("button");b.textContent=p[0];
+    b.addEventListener("click",function(){B.value=Math.round(Math.log(p[1]/0.2)/Math.log(2000)*100);L.value=p[2];upd()});$("#shPre").appendChild(b)});
+  [B,S,L].forEach(function(e){e.addEventListener("input",upd)});upd();
+})();
+
+/* ---------- generation diagrams ---------- */
+(function(){
+  var g=$("#tdma"),w=76,gap=2;
+  for(var i=0;i<8;i++){var x=8+i*(w+gap);var on=i===3;
+    mk("rect",{x:x,y:40,width:w,height:90,rx:6,style:"fill:"+(on?GCOL[2]:"#1a2440")+";opacity:"+(on?1:.9)},g);
+    var t=mk("text",{x:x+w/2,y:92,"text-anchor":"middle",fill:on?"#06101a":"#8d99b4","font-size":15,"font-weight":on?700:400},g);t.textContent=on?"user":"slot "+i}
+  var c=$("#chips");
+  var pat=[1,0,1,1,0,1,0,0,1,1,0,1,0,1,1,0];
+  pat.forEach(function(v,i){mk("rect",{x:130+i*20,y:v?34:56,width:18,height:22,style:"fill:var(--g3);opacity:"+(v?.95:.5)},c)});
+  var t=mk("text",{x:130,y:82,fill:"#8d99b4","font-size":12},c);t.textContent="spreading code, 3.84 million chips per second";
+  var L=$("#layers"),cols=["#3ddc97","#6ae7b4","#9ef0cd","#2fb87b","#c2f5df"];
+  for(var k=0;k<5;k++){mk("rect",{x:8+k*6,y:146+k*14,width:540-k*6,height:46,rx:8,style:"fill:"+cols[k]+";opacity:.28"},L);
+    mk("rect",{x:8+k*6,y:146+k*14,width:540-k*6,height:46,rx:8,fill:"none",stroke:cols[k],"stroke-width":1.2,opacity:.8},L)}
+  var tt=mk("text",{x:566,y:190,fill:"#cfd8ec","font-size":14},L);tt.textContent="5 MHz";
+})();
+(function(){
+  var svg=$("#ofdm"),n=8,x0=40,x1=620,y0=40,y1=210,sp=(x1-x0)/(n+1);
+  mk("line",{x1:x0,y1:y1,x2:x1,y2:y1,stroke:"#2c3a5e"},svg);
+  var cols=["#3aa8ff","#5fbaff","#85cbff","#3aa8ff","#5fbaff","#85cbff","#3aa8ff","#5fbaff"];
+  for(var k=0;k<n;k++){
+    var cx=x0+sp*(k+1),d="";
+    for(var x=x0;x<=x1;x+=2){var u=(x-cx)/sp,v=Math.abs(u)<1e-6?1:Math.sin(Math.PI*u)/(Math.PI*u);d+=(d?"L":"M")+x+" "+(y1-v*(y1-y0)).toFixed(1)}
+    mk("path",{d:d,fill:"none",stroke:cols[k],"stroke-width":1.8,opacity:.9},svg);
+    mk("line",{x1:cx,y1:y0-8,x2:cx,y2:y1+6,stroke:"#3aa8ff","stroke-dasharray":"3 4",opacity:.3},svg)
+  }
+  var t=mk("text",{x:x0,y:238,fill:"#8d99b4","font-size":13},svg);t.textContent="frequency, subcarrier spacing 15 kHz";
+})();
+(function(){
+  var g=$("#beams"),cx=320,cy=214;
+  mk("rect",{x:cx-10,y:cy-30,width:20,height:30,rx:3,fill:"#2d3a5c"},g);
+  mk("rect",{x:cx-3,y:cy-70,width:6,height:42,fill:"#2d3a5c"},g);
+  for(var i=0;i<7;i++){var a=(-60+i*20)*Math.PI/180,len=i===3?190:160,hw=9*Math.PI/180;
+    var p1=[cx+Math.sin(a-hw)*len,cy-70-Math.cos(a-hw)*len],p2=[cx+Math.sin(a+hw)*len,cy-70-Math.cos(a+hw)*len];
+    mk("path",{d:"M"+cx+" "+(cy-70)+"L"+p1[0].toFixed(1)+" "+p1[1].toFixed(1)+"Q"+(cx+Math.sin(a)*len*1.12).toFixed(1)+" "+(cy-70-Math.cos(a)*len*1.12).toFixed(1)+" "+p2[0].toFixed(1)+" "+p2[1].toFixed(1)+"Z",
+      style:"fill:var(--g5);opacity:"+(i===3?.55:.22)},g)}
+  mk("circle",{cx:cx+Math.sin(0)*150,cy:cy-70-150,r:7,fill:"#fff"},g);
+  var t=mk("text",{x:cx+14,y:cy-70-146,fill:"#e8edf7","font-size":13},g);t.textContent="phone on the tracked beam";
+  var t2=mk("text",{x:8,y:20,fill:"#8d99b4","font-size":13},g);t2.textContent="Base station sweeps beams; the modem measures, picks the best and keeps tracking it";
+})();
+
+/* ---------- ladder charts ---------- */
+function barLog(svg,data,lo,hi,lab){
+  var W=640,pad=46,base=272,top=34,n=data.length,bw=70,gap=(W-2*pad-n*bw)/(n-1),dec=Math.log10(hi/lo);
+  function yv(v){return base-(Math.log10(v/lo)/dec)*(base-top)}
+  for(var e=0;e<=dec+1e-9;e++){var v=lo*Math.pow(10,e),y=yv(v);
+    mk("line",{x1:pad-6,y1:y,x2:W-pad+10,y2:y,stroke:"#1b2744"},svg);
+    var t=mk("text",{x:pad-10,y:y+4,"text-anchor":"end",fill:"#6c7a9c","font-size":11},svg);t.textContent=lab(v)}
+  data.forEach(function(d,i){
+    var x=pad+i*(bw+gap),y=yv(d[1]);
+    mk("rect",{x:x,y:y,width:bw,height:base-y,rx:5,fill:d[2],opacity:.92},svg);
+    var t=mk("text",{x:x+bw/2,y:y-7,"text-anchor":"middle",fill:"#fff","font-size":13,"font-weight":700},svg);t.textContent=d[3];
+    var l=mk("text",{x:x+bw/2,y:base+20,"text-anchor":"middle",fill:"#8d99b4","font-size":13},svg);l.textContent=d[0]})
+}
+barLog($("#chRate"),[["2G",0.384,GCOL[2],"384 kbps"],["3G",42,GCOL[3],"42 Mbps"],["4G",1000,GCOL[4],"1 Gbps"],["5G",20000,GCOL[5],"20 Gbps"],["6G",200000,GCOL[6],"200 Gbps"]],0.1,1000000,fmtRate);
+barLog($("#chBw"),[["2G",0.2,GCOL[2],"0.2 MHz"],["3G",5,GCOL[3],"5 MHz"],["4G",20,GCOL[4],"20 MHz"],["5G FR1",100,GCOL[5],"100 MHz"],["5G FR2",400,GCOL[5],"400 MHz"]],0.1,1000,function(v){return strip(String(v))+" MHz"});
+
+/* ---------- standards clock ---------- */
+(function(){
+  var svg=$("#clock"),x0=60,per=130;function X(y){return x0+(y-2025)*per}
+  for(var y=2025;y<=2031;y++){mk("line",{x1:X(y),y1:44,x2:X(y),y2:300,stroke:"#1b2744"},svg);var t=mk("text",{x:X(y),y:32,"text-anchor":"middle",fill:"#8d99b4","font-size":14},svg);t.textContent=y}
+  function bar(a,b,y,col,txt,op){mk("rect",{x:X(a),y:y,width:X(b)-X(a),height:30,rx:6,fill:col,opacity:op||.85},svg);var t=mk("text",{x:X(a)+8,y:y+20,fill:"#06101a","font-size":13,"font-weight":700},svg);t.textContent=txt}
+  bar(2025.6,2027.5,60,GCOL[5],"3GPP Rel-20: 6G studies");
+  bar(2027.5,2029.2,104,GCOL[6],"Rel-21: first 6G specs");
+  bar(2026.0,2029.6,148,GCOL[4],"ITU-R: requirements, submissions, evaluation (approx.)",.6);
+  var d=mk("path",{d:"M"+X(2027.85)+" 196 l12 12 l-12 12 l-12 -12z",fill:"#ffd166"},svg);
+  var wt=mk("text",{x:X(2027.85)+20,y:214,fill:"#e8edf7","font-size":13},svg);wt.textContent="WRC-27 spectrum decisions (late 2027)";
+  mk("rect",{x:X(2030),y:240,width:X(2031)-X(2030),height:30,rx:6,fill:"url(#cg)"},svg);
+  var defs=mk("defs",{},svg),lg=mk("linearGradient",{id:"cg",x1:0,x2:1},defs);mk("stop",{offset:0,"stop-color":GCOL[6],"stop-opacity":.9},lg);mk("stop",{offset:1,"stop-color":GCOL[6],"stop-opacity":.2},lg);
+  var ct=mk("text",{x:X(2030)-8,y:260,"text-anchor":"end",fill:"#e8edf7","font-size":13},svg);ct.textContent="First commercial 6G, around 2030";
+  var tx2=X(2026.8);mk("line",{x1:tx2,y1:44,x2:tx2,y2:300,stroke:"#ffd166","stroke-dasharray":"4 4"},svg);
+  var tt=mk("text",{x:tx2+6,y:316,fill:"#ffd166","font-size":13},svg);tt.textContent="Today, Oct 2026";
+})();
+
+/* ---------- IMT-2030 hexagon and capability bars ---------- */
+(function(){
+  var svg=$("#hex"),cx=220,cy=200,R=100,names=[["Immersive","communication"],["Hyper reliable","low latency"],["Massive","communication"],["Ubiquitous","connectivity"],["AI and","communication"],["Integrated sensing","and communication"]],col=[GCOL[5],GCOL[5],GCOL[5],GCOL[6],GCOL[6],GCOL[6]],pts=[];
+  for(var k=0;k<6;k++){var a=(-90+60*k)*Math.PI/180;pts.push([cx+R*Math.cos(a),cy+R*Math.sin(a)])}
+  mk("polygon",{points:pts.map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1)}).join(" "),fill:"#0e1424",stroke:"#2a3a62","stroke-width":2},svg);
+  pts.forEach(function(p,k){
+    mk("circle",{cx:p[0],cy:p[1],r:9,fill:col[k]},svg);
+    var a=(-90+60*k)*Math.PI/180,lx=cx+(R+26)*Math.cos(a),ly=cy+(R+26)*Math.sin(a),anchor=Math.abs(Math.cos(a))<.1?"middle":(Math.cos(a)>0?"start":"end");
+    var dy=Math.sin(a)<-.5?-14:(Math.sin(a)>.5?12:0);
+    var t=mk("text",{x:lx,y:ly+dy,"text-anchor":anchor,fill:"#e8edf7","font-size":14,"font-weight":600},svg);t.textContent=names[k][0];
+    var t2=mk("text",{x:lx,y:ly+dy+16,"text-anchor":anchor,fill:"#b8c3dc","font-size":13},svg);t2.textContent=names[k][1]});
+  ["Sustainability","Security and resilience","Connecting the unconnected","Ubiquitous intelligence"].forEach(function(s,i){var t=mk("text",{x:cx,y:cy-26+i*18,"text-anchor":"middle",fill:"#8d99b4","font-size":12},svg);t.textContent=s});
+  var rows=[["Peak data rate",20,50,200,200,"Gbps"],["User-experienced rate",100,300,500,500,"Mbps"],["Mobility",500,500,1000,1000,"km/h"]],h="";
+  rows.forEach(function(r){
+    var a=r[1]/r[4]*100,lo=r[2]/r[4]*100;
+    h+='<div class="cb"><div>'+r[0]+'</div><div>'+
+      '<div class="tr"><i style="width:'+a+'%;background:'+GCOL[5]+';color:#06101a">5G: '+r[1]+' '+r[5]+'</i></div>'+
+      '<div class="tr"><i style="width:100%;background:'+GCOL[6]+';opacity:.3"></i><i style="width:'+lo+'%;background:'+GCOL[6]+';color:#06101a">6G: '+(r[2]===r[1]?r[2]:r[2])+' to '+r[3]+' '+r[5]+'</i></div></div></div>'});
+  $("#capBars").innerHTML=h;
+})();
+
+/* ---------- spectrum map ---------- */
+(function(){
+  var svg=$("#spec"),x0=40,W=820,lo=0.4,hi=400;
+  function X(f){return x0+Math.log10(f/lo)/Math.log10(hi/lo)*W}
+  var axisY=272;mk("line",{x1:x0,y1:axisY,x2:x0+W,y2:axisY,stroke:"#2c3a5e"},svg);
+  [0.5,1,2,5,10,20,50,100,200].forEach(function(f){mk("line",{x1:X(f),y1:axisY,x2:X(f),y2:axisY+5,stroke:"#2c3a5e"},svg);var t=mk("text",{x:X(f),y:axisY+20,"text-anchor":"middle",fill:"#8d99b4","font-size":12},svg);t.textContent=f+" GHz"});
+  function lane(y,label){var t=mk("text",{x:x0,y:y-8,fill:"#8d99b4","font-size":13},svg);t.textContent=label}
+  function band(a,b,y,col,op,h){mk("rect",{x:X(a),y:y,width:Math.max(3,X(b)-X(a)),height:h||26,rx:3,fill:col,opacity:op||.9},svg)}
+  lane(34,"In use for 5G");band(0.6,6,36,GCOL[5]);band(24.25,52.6,36,GCOL[5]);
+  var t1=mk("text",{x:X(1.2),y:54,fill:"#06101a","font-size":12,"font-weight":700},svg);t1.textContent="Low and mid band";
+  var t2=mk("text",{x:X(26),y:54,fill:"#06101a","font-size":12,"font-weight":700},svg);t2.textContent="FR2 mmWave";
+  lane(98,"6G candidates and study range");
+  band(7,24,100,GCOL[6],.18,26);
+  var rl=mk("text",{x:X(17),y:118,fill:"#ffb3cd","font-size":12},svg);rl.textContent="7 to 24 GHz study range";
+  var c=[[4.4,4.8,"4.4–4.8 (WRC-27)"],[6.425,7.125,"6.425–7.125 upper 6 GHz"],[7.125,8.4,"7.125–8.4 (WRC-27)"],[12.7,13.25,"12.7–13.25 (US)"],[14.8,15.35,"14.8–15.35 (WRC-27)"]];
+  c.forEach(function(b,i){band(b[0],b[1],100,GCOL[6],1,26);
+    var ty=150+(i%4)*16;mk("line",{x1:X(b[0]),y1:126,x2:X(b[0]),y2:ty-10,stroke:GCOL[6],opacity:.6},svg);
+    var t=mk("text",{x:X(b[0])+3,y:ty,fill:"#e8edf7","font-size":12},svg);t.textContent=b[2]});
+  lane(214,"Longer term");band(90,300,216,GCOL[4],.85);
+  var t3=mk("text",{x:X(100),y:234,fill:"#06101a","font-size":12,"font-weight":700},svg);t3.textContent="Sub-THz 90–300 GHz";
+})();
+
+/* ---------- physics lab ---------- */
+(function(){
+  var F=$("#phF"),V=$("#phV"),D=$("#phD"),c=299792458,fl=Math.log10(0.7),fh=Math.log10(300);
+  function freq(){return Math.pow(10,fl+Number(F.value)/100*(fh-fl))}
+  function fspl(f,d){return 20*Math.log10(4*Math.PI*d*f*1e9/c)}
+  var svg=$("#phC");
+  function chart(f,d){
+    svg.innerHTML="";var x0=40,W=460,y0=20,y1=200;
+    var lo=fspl(0.7,d),hi=fspl(300,d);
+    function X(g){return x0+(Math.log10(g)-fl)/(fh-fl)*W}
+    function Y(l){return y1-(l-lo)/(hi-lo)*(y1-y0)}
+    var p="";for(var i=0;i<=60;i++){var g=Math.pow(10,fl+i/60*(fh-fl));p+=(i?"L":"M")+X(g).toFixed(1)+" "+Y(fspl(g,d)).toFixed(1)}
+    mk("path",{d:p,fill:"none",stroke:GCOL[6],"stroke-width":2.4},svg);
+    [1,3.5,10,30,100,300].forEach(function(g){mk("line",{x1:X(g),y1:y1,x2:X(g),y2:y1+5,stroke:"#2c3a5e"},svg);var t=mk("text",{x:X(g),y:y1+20,"text-anchor":"middle",fill:"#8d99b4","font-size":12},svg);t.textContent=g+" GHz"});
+    [lo,(lo+hi)/2,hi].forEach(function(l){var t=mk("text",{x:x0-6,y:Y(l)+4,"text-anchor":"end",fill:"#6c7a9c","font-size":11},svg);t.textContent=Math.round(l)+" dB"});
+    mk("circle",{cx:X(f),cy:Y(fspl(f,d)),r:7,fill:"#fff"},svg)
+  }
+  function upd(){
+    var f=freq(),v=Number(V.value),d=Number(D.value),lam=c/(f*1e9)*1000,ms=v/3.6,fd=ms*f*1e9/c,pl=fspl(f,d),rel=20*Math.log10(f/3.5),el=Math.pow(f/3.5,2);
+    $("#phFo").textContent=(f<10?f.toFixed(1):Math.round(f))+" GHz";$("#phVo").textContent=v+" km/h";$("#phDo").textContent=d+" m";
+    $("#phK").innerHTML=
+      '<div class="kpi"><b>'+(lam<10?lam.toFixed(1):Math.round(lam))+' mm</b><span>wavelength</span></div>'+
+      '<div class="kpi"><b>'+(fd>=1000?(fd/1000).toFixed(2)+' kHz':Math.round(fd)+' Hz')+'</b><span>max Doppler shift</span></div>'+
+      '<div class="kpi"><b>'+pl.toFixed(1)+' dB</b><span>free-space path loss</span></div>'+
+      '<div class="kpi"><b>'+(rel>=0?"+":"")+rel.toFixed(1)+' dB</b><span>vs 3.5 GHz, same distance</span></div>'+
+      '<div class="kpi"><b>'+(el>=10?Math.round(el):el.toFixed(1))+'×</b><span>antenna elements in the same area as at 3.5 GHz</span></div>';
+    $("#phT").innerHTML="<b>Read it:</b> at "+(f<10?f.toFixed(1):Math.round(f))+" GHz and "+v+" km/h the Doppler shift is "+(fd>=1000?(fd/1000).toFixed(2)+" kHz":Math.round(fd)+" Hz")+", which is "+(fd/15000*100).toFixed(0)+"% of a 15 kHz subcarrier and "+(fd/120000*100).toFixed(1)+"% of a 120 kHz one. Path loss rises 20·log10(f), but the same footprint holds (f/3.5)² more antenna elements, so beamforming can win the loss back. That is why higher bands arrive together with bigger arrays and beam tracking.";
+    chart(f,d)
+  }
+  [["LTE 2.1",2.1],["n78 3.5",3.5],["Upper mid 7.5",7.5],["Upper mid 15",15],["mmWave 28",28],["Sub-THz 140",140]].forEach(function(p){
+    var b=document.createElement("button");b.textContent=p[0];b.addEventListener("click",function(){F.value=Math.round((Math.log10(p[1])-fl)/(fh-fl)*100);upd()});$("#phPre").appendChild(b)});
+  [F,V,D].forEach(function(e){e.addEventListener("input",upd)});upd();
+})();
+
+/* ---------- requirements explorer ---------- */
+(function(){
+  var R=[
+    ["Spectrum and RF","ana","Tune across legacy bands plus new upper mid-band candidates (4.4–4.8, 6.425–8.4, 14.8–15.35 GHz), coexisting with Wi-Fi and satellite services.","New filters, power amplifiers and antennas in a phone that is already RF-crowded; band plans are still moving until WRC-27.","How would you fit one more band into a front-end budget that is already full?"],
+    ["Bandwidth and throughput","src","IMT-2030 sets peak-rate targets of 50 to 200 Gbps by scenario, so wider carriers and more aggregation.","ADC/DAC rates, FFT size, decoder throughput and memory bandwidth all scale with bandwidth, and so does power.","Where does the power go when bandwidth doubles, and what do you do about it?"],
+    ["Air interface","src","CP-OFDM downlink; CP-OFDM and DFT-s-OFDM uplink; 5G LDPC and Polar codes largely reused.","The hard part is not a new waveform; it is wider carriers, new reference signals and a non-backward-compatible stack running next to NR.","What does reuse of 5G codes save in silicon, and what does it not?"],
+    ["AI-native PHY","src","Run learned functions for CSI feedback, beam management or channel estimation, with a mandatory non-AI fallback path.","On-device inference budget, deterministic latency, model lifecycle and interoperability across network vendors, and graceful switching.","How do you decide when to fall back from the model to the classical algorithm?"],
+    ["Sensing (ISAC)","src","Use communication signals to measure range, velocity and presence; the air interface gets sensing reference signals and measurement feedback.","Sharing RF and baseband hardware with communication, timing accuracy, and privacy.","What hardware can the sensing path share with the communication path?"],
+    ["Satellite and NTN","src","Treat non-terrestrial access as a native mode for ubiquitous connectivity; DFT-s-OFDM in the downlink for NTN is being studied.","Large Doppler and delay, tiny link budget from a handheld antenna, and GNSS-assisted pre-compensation.","Why does NTN force timing and frequency pre-compensation in the UE?"],
+    ["Energy and thermal","src","Sustainability is an IMT-2030 capability: more bits per joule, not only more bits.","A thin phone has a fixed thermal budget; sustained throughput is limited by heat, not by the spec.","Name three ways to cut energy per bit in a modem."],
+    ["Mobility and reliability","src","Support 500 to 1000 km/h mobility targets with minimal interruption.","Doppler spread at higher carriers stresses channel tracking and subcarrier spacing choices.","What is the Doppler shift at 7 GHz and 500 km/h, and what does it do to OFDM?"],
+    ["Security and legacy","ana","Stronger protection of control signaling and security by design, while staying multi-mode from 2G to 6G.","Each added mode multiplies RF band combinations, test and certification effort, and silicon area.","How do you keep a five-mode modem from becoming the biggest block on the die?"]
+  ],box=$("#reqBtns"),out=$("#reqOut");
+  function pick(i){$$("button",box).forEach(function(b,k){b.setAttribute("aria-pressed",k===i)});var r=R[i];
+    out.innerHTML="<h3>"+r[0]+' <span class="tag '+(r[1]==="src"?"src":"ana")+'">'+(r[1]==="src"?"Sourced":"Analysis")+"</span></h3><div class='rule' style='--c:var(--g4)'><b>The modem must</b>"+r[2]+"</div><div class='rule' style='--c:var(--g6)'><b>Why it is hard</b>"+r[3]+"</div><div class='say'><b>Likely question:</b> "+r[4]+"</div>"}
+  R.forEach(function(r,i){var b=document.createElement("button");b.textContent=r[0];b.addEventListener("click",function(){pick(i)});box.appendChild(b)});pick(0);
+})();
+
+/* ---------- interview cards ---------- */
+(function(){
+  var Q=[
+    ["Foundations","What does a cellular modem do beyond modulation?","It runs the full protocol conversation: cell search, registration, scheduling, HARQ, mobility, power control and security, plus PHY processing and RF control."],
+    ["Foundations","State Shannon capacity and what each term means for design.","C = B·log2(1+SNR). With MIMO it scales roughly with the number of spatial layers. Levers: bandwidth (spectrum and RF cost), SNR (link budget and interference), layers (antennas and compute). Each costs power."],
+    ["Foundations","Why is the wireless channel hard?","Multipath gives frequency-selective fading and inter-symbol interference; Doppler makes the channel time-varying; noise, interference and path loss limit SNR."],
+    ["Generations","TDMA, CDMA, OFDMA in one line each.","TDMA: users take turns in time. CDMA: users share everything and are separated by codes. OFDMA: users get sets of orthogonal subcarriers and time slots, scheduled dynamically."],
+    ["Generations","Why did 3G need fast power control?","Near-far problem: all users share the band, so a strong nearby signal swamps weak ones. Closed-loop power control at 1500 Hz keeps each user just loud enough."],
+    ["Generations","Why does OFDM handle multipath well?","Long symbols with a cyclic prefix make each subcarrier see flat fading, so equalization is one complex multiply per subcarrier. A prefix longer than the delay spread removes ISI."],
+    ["Generations","Why SC-FDMA or DFT-s-OFDM in the uplink?","Lower peak-to-average power ratio, so the phone amplifier runs closer to saturation: better efficiency, battery and coverage."],
+    ["Generations","What is HARQ and why does it help?","The receiver keeps failed packets and soft-combines them with retransmissions. Fast retransmission lets the scheduler run at a higher first-attempt error rate, raising throughput."],
+    ["Generations","LDPC versus Polar in NR?","LDPC for data: highly parallel decoding, high throughput on large blocks. Polar for control: strong on short blocks."],
+    ["Generations","What is numerology μ in NR?","Subcarrier spacing = 15·2^μ kHz and slot length = 1/2^μ ms. Higher μ gives shorter symbols for low latency and robustness to phase noise at mmWave; the cyclic prefix scales down with it."],
+    ["Generations","Why beamforming in FR2?","Higher path loss and small antenna elements call for array gain. The modem must sweep, select, track and recover beams as the user moves or is blocked."],
+    ["Generations","What is EN-DC and what does it cost a modem?","Non-standalone 5G with an LTE anchor and an NR secondary cell. Two radios and uplinks run at once, adding RF complexity, power and thermal load."],
+    ["Generations","What does carrier aggregation add to a modem?","More RF chains and band combinations, wider baseband, and inter-band interference problems such as harmonics and intermodulation, all at higher power."],
+    ["PHY and RF","Describe the link-adaptation loop.","The UE reports CQI or CSI; the network picks modulation, code rate and rank to hit a block-error target, typically around 10% on first transmission, with HARQ cleaning up the rest."],
+    ["PHY and RF","What limits real phone throughput?","Heat and power, not the spec peak: sustained decoding, PA heat, antenna efficiency and SNR."],
+    ["PHY and RF","What is DRX for?","Discontinuous reception lets the radio sleep between occasions when it monitors the control channel. It trades latency for battery."],
+    ["PHY and RF","What is timing advance?","The UE transmits early by its round-trip delay so uplink signals from users at different distances arrive aligned at the base station."],
+    ["PHY and RF","Doppler at 7 GHz and 500 km/h?","f_d = v·f/c = 138.9 m/s × 7 GHz / 3×10^8 ≈ 3.2 kHz, about 22% of a 15 kHz subcarrier, so inter-carrier interference matters and tracking must be good."],
+    ["6G","What is already decided for the 6G waveform and coding?","CP-OFDM in the downlink; CP-OFDM and DFT-s-OFDM in the uplink; 5G channel codes largely reused (3GPP decisions reported in 2026). Differentiation moves to system design."],
+    ["6G","Why the 7 to 15 GHz upper mid-band?","Over 2 GHz of potential spectrum with propagation closer to bands below 7 GHz than to mmWave, so existing sites can be reused. Costs: weaker uplink, bigger arrays, RF redesign. Regulation is decided at WRC-27 (agenda item 1.7)."],
+    ["6G","What constraint applies to AI in the 6G air interface?","AI-dependent features need a non-AI fallback so baseline service holds without them. The modem needs both paths and clean switching, plus model lifecycle and multi-vendor interoperability."],
+    ["6G","What is ISAC and what does it mean for a modem?","Using communication signals to sense the environment: range, velocity, presence. Needs sensing reference signals, measurement and feedback, shared hardware and privacy controls."],
+    ["6G","How would you cut energy per bit in a 6G modem?","Smarter scheduling and sleep, bandwidth-part adaptation, dedicated low-precision accelerators, ADC resolution scaling, learned power control, and SoC integration to cut interface power."],
+    ["6G","Where would you worry first about 6G on a phone?","Thermal and power at wider bandwidths, front-end area for the new band, and the burden of staying five-mode from 2G to 6G."]
+  ],cats=["All"],sel="All";
+  Q.forEach(function(q){if(cats.indexOf(q[0])<0)cats.push(q[0])});
+  var fb=$("#qFilters"),qa=$("#qa");
+  function render(){
+    qa.innerHTML="";$$("button",fb).forEach(function(b){b.setAttribute("aria-pressed",b.textContent===sel)});
+    Q.forEach(function(q){if(sel!=="All"&&q[0]!==sel)return;
+      var b=document.createElement("button");b.className="q";b.setAttribute("aria-expanded","false");
+      b.innerHTML="<small>"+q[0]+'</small><div class="qq"></div><div class="aa"></div>';
+      $(".qq",b).textContent=q[1];$(".aa",b).textContent=q[2];
+      b.addEventListener("click",function(){b.setAttribute("aria-expanded",b.getAttribute("aria-expanded")==="true"?"false":"true")});qa.appendChild(b)})
+  }
+  cats.forEach(function(c){var b=document.createElement("button");b.textContent=c;b.addEventListener("click",function(){sel=c;render()});fb.appendChild(b)});render();
+})();
+
+/* ---------- study plan ---------- */
+(function(){
+  var P=[
+    ["Physical layer",["OFDM, cyclic prefix, FFT sizing","Channel estimation with DMRS","MIMO: rank, precoding, SVD","Turbo, LDPC and Polar coding","Synchronization: PSS/SSS, CFO, STO","Simulate an OFDM link in Python: BER versus SNR over multipath"],"Tse and Viswanath, Fundamentals of Wireless Communication; 3GPP TS 38.211 and 38.212"],
+    ["RF and power",["Receiver chain, noise figure, sensitivity","Linearity: EVM, ACLR, intermodulation","PA efficiency and PAPR","Phase noise and LO design","ADC resolution and dynamic range","Thermal limits and sustained throughput"],"Razavi, RF Microelectronics; 3GPP TS 38.101 (UE RF)"],
+    ["Protocol stack",["RRC states and NAS registration","Mobility: measurements, handover, reselection","HARQ and ARQ interplay","DRX and UE power saving","IMS, VoLTE and VoNR","EN-DC and dual connectivity"],"3GPP TS 38.300, 38.331, 38.321; Sesia et al., LTE: The UMTS Long Term Evolution"],
+    ["6G deep dive",["Read TR 38.914 scenarios and requirements","Read TR 38.760-1 RAN1 study report","IMT-2030 framework, ITU-R M.2160","AI/ML for the air interface, with fallback","ISAC and NTN basics","Spectrum: WRC-27 agenda item 1.7"],"Dahlman, Parkvall, Sköld, 5G NR: The Next Generation Wireless Access Technology"],
+    ["Interview readiness",["Answer all 24 cards aloud without notes","Derive Shannon, Doppler and path loss on a whiteboard","Explain one modem trade-off end to end","Prepare two questions about Apple's C-series roadmap","Mock interview with a peer"],"Practice from slides 21 and 22"]
+  ],box=$("#plan");
+  function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+  P.forEach(function(p,pi){
+    var d=document.createElement("div");d.className="panel";var h="<h3>"+p[0]+"</h3>";
+    p[1].forEach(function(t,ti){var id="pl"+pi+"_"+ti;h+='<label class="chk"><input type="checkbox" id="'+id+'"><span>'+t+"</span></label>"});
+    h+='<p class="small mute" style="margin-top:8px">'+p[2]+"</p>";d.innerHTML=h;box.appendChild(d);
+    $$("input",d).forEach(function(i){i.checked=store(i.id)==="1";i.addEventListener("change",function(){store(i.id,i.checked?"1":"0")})})
+  });
+})();
+
+
+/* ---------- illustrations ---------- */
+var G1="#59678a";
+function arcs(cx,cy,c,n){var h="";for(var i=1;i<=n;i++){var r=8+i*9;h+='<path d="M'+cx+' '+(cy-r)+' A'+r+' '+r+' 0 0 1 '+cx+' '+(cy+r)+'" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" opacity="'+(1-i*0.2)+'"/>'}return h}
+function dots(x,y,cols,rows,dx,dy,c,r){var h="";for(var i=0;i<cols;i++)for(var j=0;j<rows;j++)h+='<circle cx="'+(x+i*dx)+'" cy="'+(y+j*dy)+'" r="'+r+'" fill="'+c+'"/>';return h}
+function towerIn(g){
+  var c=g===1?G1:GCOL[g],gr='<line x1="8" y1="165" x2="112" y2="165" stroke="#2a3a62" stroke-width="2"/>',h=gr;
+  function lattice(top,w0,w1){var o='<path d="M'+(60-w0)+' 165 L'+(60-w1)+' '+top+' L'+(60+w1)+' '+top+' L'+(60+w0)+' 165" fill="none" stroke="'+c+'" stroke-width="2"/>';
+    var n=7;for(var i=0;i<n;i++){var y1=165-(165-top)*i/n,y2=165-(165-top)*(i+1)/n,a1=w0+(w1-w0)*i/n,a2=w0+(w1-w0)*(i+1)/n;
+      o+='<line x1="'+(60-a1)+'" y1="'+y1+'" x2="'+(60+a2)+'" y2="'+y2+'" stroke="'+c+'" stroke-width="1.2" opacity=".8"/><line x1="'+(60+a1)+'" y1="'+y1+'" x2="'+(60-a2)+'" y2="'+y2+'" stroke="'+c+'" stroke-width="1.2" opacity=".8"/>'}return o}
+  if(g===1){h+=lattice(60,22,5)+'<rect x="52" y="44" width="16" height="20" fill="'+c+'"/><line x1="60" y1="44" x2="60" y2="22" stroke="'+c+'" stroke-width="3"/>'+arcs(70,38,c,2)}
+  else if(g===2){h+=lattice(46,24,6)+'<rect x="40" y="30" width="9" height="22" rx="2" fill="'+c+'"/><rect x="55.5" y="30" width="9" height="22" rx="2" fill="'+c+'"/><rect x="71" y="30" width="9" height="22" rx="2" fill="'+c+'"/>'+arcs(84,40,c,2)}
+  else if(g===3){h+=lattice(52,22,6)+'<line x1="32" y1="46" x2="88" y2="46" stroke="'+c+'" stroke-width="3"/><rect x="32" y="22" width="10" height="26" rx="2" fill="'+c+'"/><rect x="55" y="22" width="10" height="26" rx="2" fill="'+c+'"/><rect x="78" y="22" width="10" height="26" rx="2" fill="'+c+'"/><path d="M82 96 a14 14 0 0 1 0 -24 z" fill="'+c+'" opacity=".8"/>'+arcs(92,36,c,3)}
+  else if(g===4){h+='<rect x="57" y="40" width="6" height="125" fill="'+c+'"/><line x1="34" y1="44" x2="86" y2="44" stroke="'+c+'" stroke-width="3"/><rect x="34" y="14" width="10" height="34" rx="3" fill="'+c+'"/><rect x="55" y="14" width="10" height="34" rx="3" fill="'+c+'"/><rect x="76" y="14" width="10" height="34" rx="3" fill="'+c+'"/><rect x="48" y="60" width="9" height="14" rx="2" fill="'+c+'" opacity=".7"/><rect x="63" y="60" width="9" height="14" rx="2" fill="'+c+'" opacity=".7"/>'+arcs(92,34,c,3)}
+  else if(g===5){h+='<rect x="57" y="40" width="6" height="125" fill="'+c+'"/><rect x="34" y="22" width="52" height="58" rx="5" fill="#16203a" stroke="'+c+'" stroke-width="2"/>'+dots(42,30,6,7,7,7.2,c,1.9)+'<rect x="14" y="108" width="4" height="57" fill="'+c+'" opacity=".8"/><rect x="8" y="98" width="16" height="12" rx="3" fill="'+c+'" opacity=".8"/>'+arcs(92,50,c,3)}
+  else{h+='<rect x="57" y="52" width="6" height="113" fill="'+c+'"/><rect x="22" y="30" width="34" height="46" rx="5" fill="#2b1230" stroke="'+c+'" stroke-width="2"/>'+dots(28,36,4,5,7.4,8.4,c,1.9)+'<rect x="64" y="30" width="34" height="46" rx="5" fill="#2b1230" stroke="'+c+'" stroke-width="2"/>'+dots(70,36,4,5,7.4,8.4,c,1.9)+'<circle cx="60" cy="20" r="3" fill="#fff"/><path d="M26 18 a40 40 0 0 1 68 0" fill="none" stroke="'+c+'" stroke-width="1.6" stroke-dasharray="3 4"/><path d="M100 94 q10 -6 14 -20" fill="none" stroke="'+c+'" stroke-width="1.4" stroke-dasharray="2 3"/><rect x="108" y="64" width="8" height="8" fill="'+c+'" transform="rotate(30 112 68)"/>'}
+  return h}
+function phoneIn(k,c){
+  var body='fill="#111a30" stroke="'+c+'" stroke-width="2"',sc='fill="'+c+'" opacity=".35"',h="";
+  function keys(x,y,cols,rows,dx,dy){return dots(x,y,cols,rows,dx,dy,c,2.2)}
+  if(k==="brick"){h='<rect x="29" y="14" width="6" height="30" rx="2" fill="'+c+'"/><rect x="20" y="40" width="42" height="104" rx="6" '+body+'/><rect x="26" y="48" width="30" height="14" rx="2" '+sc+'/>'+keys(30,76,3,5,10,12)}
+  else if(k==="cand"){h='<rect x="18" y="26" width="44" height="114" rx="12" '+body+'/><rect x="24" y="36" width="32" height="28" rx="3" '+sc+'/><rect x="26" y="70" width="28" height="5" rx="2" fill="'+c+'" opacity=".6"/>'+keys(28,86,3,4,12,13)}
+  else if(k==="flip"){h='<rect x="18" y="16" width="44" height="58" rx="9" '+body+'/><rect x="24" y="24" width="32" height="30" rx="3" '+sc+'/><circle cx="40" cy="79" r="5" fill="'+c+'"/><rect x="18" y="84" width="44" height="54" rx="9" '+body+'/>'+keys(27,94,3,4,13,11)}
+  else if(k==="home"){h='<rect x="12" y="10" width="56" height="130" rx="10" '+body+'/><rect x="17" y="28" width="46" height="82" rx="2" '+sc+'/><rect x="31" y="17" width="18" height="3.5" rx="2" fill="'+c+'" opacity=".7"/><circle cx="40" cy="125" r="5.5" fill="none" stroke="'+c+'" stroke-width="1.6"/>'}
+  else if(k==="notch"){h='<rect x="12" y="8" width="56" height="134" rx="13" '+body+'/><rect x="15.5" y="11.5" width="49" height="127" rx="10.5" '+sc+'/><rect x="28" y="11.5" width="24" height="7" rx="3.5" fill="#111a30"/>'}
+  else if(k==="island"){h='<rect x="12" y="8" width="56" height="134" rx="13" '+body+'/><rect x="15.5" y="11.5" width="49" height="127" rx="10.5" '+sc+'/><rect x="31" y="17" width="18" height="6" rx="3" fill="#111a30"/>'}
+  else{h='<rect x="14" y="8" width="52" height="134" rx="12" '+body+'/><rect x="17" y="11" width="46" height="128" rx="9.5" '+sc+'/><rect x="31" y="16" width="18" height="6" rx="3" fill="#111a30"/><path d="M74 40 a22 22 0 0 1 0 34" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round"/><path d="M78 32 a32 32 0 0 1 0 50" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" opacity=".6"/>'}
+  return h}
+function tw(g){return '<svg viewBox="0 0 120 170" role="img" aria-label="Tower of the '+(g===1?"1G":g+"G")+' era">'+towerIn(g)+'</svg>'}
+function ph(k,c){return '<svg viewBox="0 0 90 150" role="img" aria-label="Phone silhouette">'+phoneIn(k,c)+'</svg>'}
+
+var ERA={
+  1:{y:"1983",n:"1G",ph:"brick",t:"Analog voice, handheld for the first time",c:G1},
+  2:{y:"1991",n:"2G",ph:"cand",t:"Digital voice and text messages",c:GCOL[2]},
+  3:{y:"2001",n:"3G",ph:"flip",t:"Mobile data and the first app phones",c:GCOL[3]},
+  4:{y:"2009",n:"4G",ph:"home",t:"Broadband in a pocket: video, maps, apps",c:GCOL[4]},
+  5:{y:"2019",n:"5G",ph:"notch",t:"High rates, low latency, millimeter wave, beams",c:GCOL[5]},
+  6:{y:"~2030",n:"6G",ph:"future",t:"AI in the loop, sensing, new spectrum",c:GCOL[6]}
+};
+var FACTS={
+  2:["First GSM call in Finland, 1991","First text message sent in December 1992","Towers: tall lattice masts with three sector panels"],
+  3:["First commercial WCDMA network: NTT DoCoMo, Japan, October 2001","iPhone 3G (2008) put mobile apps and data in the mainstream","Towers: more panels per sector, microwave dishes for backhaul"],
+  4:["First commercial LTE networks: Stockholm and Oslo, December 2009","iPhone 5 (2012) was the first iPhone with LTE","Towers: slim sector panels with radio heads mounted near the antennas"],
+  5:["First commercial 5G launches: April 2019 in South Korea and the US","iPhone 12 (2020) was the first 5G iPhone","Towers: massive-MIMO panels plus street-level small cells"],
+  6:["Commercial networks widely expected around 2030","Towers: larger arrays for 7 to 15 GHz, sensing and AI at the edge (expected, not settled)","Phones: five-mode modem inside a thin thermal budget"]
+};
+$$(".era").forEach(function(el){
+  var g=Number(el.getAttribute("data-era")),e=ERA[g];el.style.setProperty("--c",e.c);
+  el.innerHTML='<div class="pic">'+tw(g)+'</div><div class="pic ph">'+ph(e.ph,e.c)+'</div><div class="facts"><b>'+e.n+', '+(g===6?"expected ":"first launched ")+e.y+'</b><ul><li>'+FACTS[g].join("</li><li>")+'</li></ul>'+(g===6?'<span class="tag ana">Analysis</span>':'')+'</div>'});
+(function(){
+  var h="";[1,2,3,4,5,6].forEach(function(g){var e=ERA[g];
+    h+='<div class="col" style="--c:'+e.c+'"><div class="yr">'+e.y+'</div><div class="gn">'+e.n+'</div><div class="pics">'+tw(g)+ph(e.ph,e.c)+'</div><p>'+e.t+'</p></div>'});
+  $("#evo").innerHTML=h;
+  var ip=[["2007","iPhone","2G (EDGE)","home",GCOL[2]],["2008","iPhone 3G","3G","home",GCOL[3]],["2012","iPhone 5","First LTE iPhone","home",GCOL[4]],["2020","iPhone 12","First 5G iPhone","notch",GCOL[5]],["2025","iPhone 16e","First Apple modem (C1)","notch",GCOL[6]]],h2="";
+  ip.forEach(function(x){h2+='<div class="col" style="--c:'+x[4]+'"><div class="yr">'+x[0]+'</div><div class="gn">'+x[1]+'</div><div class="pics">'+ph(x[3],x[4])+'</div><p>'+x[2]+'</p></div>'});
+  $("#iph").innerHTML=h2;
+})();
+
+/* title tower */
+(function(){var s=document.createElementNS(NS,"svg");s.setAttribute("viewBox","0 0 120 170");s.setAttribute("class","heroTower");s.setAttribute("aria-hidden","true");
+  s.innerHTML=towerIn(6).replace(/#ff4f8b/g,"#ff4f8b");$("#s1").appendChild(s)})();
+
+/* handshake diagram */
+(function(){
+  var svg=$("#hand"),xl=110,xr=590,M=[["r","Sync signals (PSS/SSS) and beam index"],["r","System information (MIB, SIBs)"],["l","Random access preamble (PRACH)"],["r","Timing advance and uplink grant"],["l","RRC setup complete, NAS registration"],["b","Scheduled data, CSI reports, HARQ feedback"]];
+  var defs=mk("defs",{},svg),mkr=mk("marker",{id:"ah",viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:7,markerHeight:7,orient:"auto-start-reverse"},defs);mk("path",{d:"M0 0 L10 5 L0 10z",fill:"#ffd166"},mkr);
+  var t=mk("text",{x:xl,y:24,"text-anchor":"middle",fill:"#e8edf7","font-size":16,"font-weight":700},svg);t.textContent="Phone";
+  var t2=mk("text",{x:xr,y:24,"text-anchor":"middle",fill:"#e8edf7","font-size":16,"font-weight":700},svg);t2.textContent="Tower";
+  mk("line",{x1:xl,y1:34,x2:xl,y2:320,stroke:"#2a3a62","stroke-width":2},svg);mk("line",{x1:xr,y1:34,x2:xr,y2:320,stroke:"#2a3a62","stroke-width":2},svg);
+  M.forEach(function(m,i){var y=62+i*46,a=m[0];
+    var ln=mk("line",{x1:a==="l"?xl+4:xr-4,y1:y,x2:a==="l"?xr-4:xl+4,y2:y,stroke:"#ffd166","stroke-width":1.8,"marker-end":"url(#ah)"},svg);
+    if(a==="b"){ln.setAttribute("marker-start","url(#ah)")}
+    var tx=mk("text",{x:(xl+xr)/2,y:y-8,"text-anchor":"middle",fill:"#cfd8ec","font-size":14},svg);tx.textContent=m[1]})
+})();
+
+/* multipath scene */
+(function(){
+  var svg=$("#multi");
+  svg.innerHTML='<line x1="10" y1="205" x2="690" y2="205" stroke="#2a3a62" stroke-width="2"/>'+
+   '<svg x="20" y="40" width="110" height="160" viewBox="0 0 120 170">'+towerIn(4)+'</svg>'+
+   '<rect x="300" y="70" width="110" height="135" fill="#16203a" stroke="#2f4170" stroke-width="2"/>'+dots(318,86,5,7,20,16,"#2f4170",3)+
+   '<svg x="560" y="95" width="70" height="115" viewBox="0 0 90 150">'+phoneIn("notch","#3aa8ff")+'</svg>'+
+   '<path d="M112 58 L560 140" stroke="#3ddc97" stroke-width="2.2" fill="none"/>'+
+   '<path d="M112 62 L300 118 L560 150" stroke="#ffd166" stroke-width="2" stroke-dasharray="6 5" fill="none"/>'+
+   '<path d="M112 66 L400 74 L580 118" stroke="#ff4f8b" stroke-width="2" stroke-dasharray="2 5" fill="none"/>'+
+   '<text x="330" y="40" fill="#3ddc97" font-size="14">direct path, arrives first</text>'+
+   '<text x="170" y="170" fill="#ffd166" font-size="14">reflected off a wall, arrives later</text>'+
+   '<text x="430" y="226" fill="#ff4f8b" font-size="14" text-anchor="middle">reflected off a rooftop edge, later still</text>'+
+   '<path d="M650 120 l30 0" stroke="#e8edf7" stroke-width="2" marker-end=""/><text x="640" y="100" fill="#e8edf7" font-size="13">moving: Doppler</text>';
+})();
+
+/*END-JS*/
+show(Math.max(0,slides.findIndex(function(s){return location.hash==="#"+s.id})),true);
+</script>
+</body>
+</html>
